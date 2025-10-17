@@ -12,6 +12,9 @@
 import type { TableColumn } from '@nuxt/ui'
 import { sampleRequest } from '@/models/request';
 import type { Request } from '@/models/request';
+import { h, ref, computed } from 'vue'
+
+const UBadge = resolveComponent('UBadge')
 
 const requests = ref<Request[]>([])
 
@@ -33,9 +36,12 @@ const columns: TableColumn<Request>[] = [
     header: 'Requester'
   },
   {
-    // accessorKey: 'status',
-    accessorFn: (row) => row.status.toString(),
+    accessorKey: 'status',
     header: 'Status',
+    cell: ({ row }) => {
+      const status = row.getValue('status') as string
+      return h(UBadge, { color: 'neutral', variant: 'soft' }, () => status)
+    }
   },
   {
     header: 'Date created',
