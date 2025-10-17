@@ -2,7 +2,7 @@
   <header class="bg-white border-b border-muted">
     <div class="container mx-auto px-4 py-2 flex justify-between items-center">
       <div class="flex gap-6 items-center">
-        <h1 class="text-sm font-bold font-mono tracking-tighter py-2 px-4 bg-primary text-inverted">relay-os</h1>
+        <h1 class="text-sm font-semibold font-mono tracking-tighter py-2 px-4 bg-primary text-inverted">relay-os</h1>
         <UNavigationMenu orientation="horizontal" :items="navigationItems":ui="{
           list: 'gap-3',
           link: 'px-3 py-2 text-sm gap-4',
