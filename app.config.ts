@@ -59,7 +59,9 @@ export default defineAppConfig({
     table: {
       slots: {
         tr: 'hover:cursor-pointer',
-        separator: 'bg-(--ui-border-muted)'
+        separator: 'bg-(--ui-border-muted)',
+        // td: 'px-0',
+        // th: 'px-0'
       }
     },
     pagination: {

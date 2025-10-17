@@ -10,5 +10,5 @@ definePageMeta({
     <UButton size="lg" label="New Request" />
   </PageHeader>
 
-  <PagePlaceholder />
+  <RequestsData />
 </template>

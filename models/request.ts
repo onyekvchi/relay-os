@@ -1,7 +1,6 @@
 import type { User } from "@/models/user"
-import type { Workflow } from "@/models/workflow"
-import { sampleWorkflow } from "@/models/workflow"
-import { sampleUser } from "@/models/user"
+import { createSampleWorkflow, type Workflow } from "@/models/workflow"
+import { createSampleUser, sampleUser } from "@/models/user"
 
 export type Request = {
   type: Workflow,
@@ -13,12 +12,12 @@ export type Request = {
 }
 
 export enum RequestStatus {
-  awaitingApproval,
-  changesRequested,
-  awaitingAction,
-  completed,
-  rejected,
-  cancelled
+  awaitingApproval = "Awaiting Approval",
+  changesRequested = "Changes Requested",
+  awaitingAction = "Awaiting Action",
+  completed = "Completed",
+  rejected = "Rejected",
+  cancelled = "Cancelled"
 }
 
 export type RequestLog = {
@@ -32,10 +31,21 @@ export enum RequestAction {
 }
 
 export const sampleRequest: Request = {
-  type: sampleWorkflow,
+  type: createSampleWorkflow(),
   initiator: sampleUser,
   status: RequestStatus.awaitingApproval,
   observers: [],
   createdAt: "2025-10-15T08:30:00.000000Z",
   logs: []
+}
+
+export function createSampleRequests(): Request {
+  return {
+    type: createSampleWorkflow(),
+    initiator: createSampleUser(),
+    status: RequestStatus.awaitingApproval,
+    observers: [],
+    createdAt: "2025-10-15T08:30:00.000000Z",
+    logs: []
+  }
 }

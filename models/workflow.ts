@@ -41,43 +41,45 @@ export type WorkflowAction = {
   actor: User
 }
 
-export const sampleWorkflow: Workflow = {
-  name: "Pricing Change Request",
-  fields: [{
-    label: "Merchant name",
-    type: WorkflowFieldType.string,
-    description: "Whose pricing do you want to change?"
-  }, {
-    label: "Old price",
-    type: WorkflowFieldType.amount,
-    description: "How much were they paying before?"
-  }, {
-    label: "New price",
-    type: WorkflowFieldType.amount,
-    description: "How much do we want to change it to?"
-  }, {
-    label: "Reason for the change",
-    type: WorkflowFieldType.text,
-    description: "How are we justifying this change?"
-  }],
-  steps: [
-    {
-      status: WorkflowApprovalStatus.pending,
-      approvals: [{
-        approver: sampleAdminUsers[0],
-        status: WorkflowApprovalStatus.pending
-      }]
-    },
-    {
-      status: WorkflowApprovalStatus.pending,
-      approvals: [{
-        approver: sampleAdminUsers[1],
-        status: WorkflowApprovalStatus.pending
-      }]
+export function createSampleWorkflow(): Workflow {
+  return {
+    name: "Pricing Change Request",
+    fields: [{
+      label: "Merchant name",
+      type: WorkflowFieldType.string,
+      description: "Whose pricing do you want to change?"
+    }, {
+      label: "Old price",
+      type: WorkflowFieldType.amount,
+      description: "How much were they paying before?"
+    }, {
+      label: "New price",
+      type: WorkflowFieldType.amount,
+      description: "How much do we want to change it to?"
+    }, {
+      label: "Reason for the change",
+      type: WorkflowFieldType.text,
+      description: "How are we justifying this change?"
+    }],
+    steps: [
+      {
+        status: WorkflowApprovalStatus.pending,
+        approvals: [{
+          approver: sampleAdminUsers[0],
+          status: WorkflowApprovalStatus.pending
+        }]
+      },
+      {
+        status: WorkflowApprovalStatus.pending,
+        approvals: [{
+          approver: sampleAdminUsers[1],
+          status: WorkflowApprovalStatus.pending
+        }]
+      }
+    ],
+    action: {
+      actor: sampleITUser,
+      status: WorkflowActionStatus.pending
     }
-  ],
-  action: {
-    actor: sampleITUser,
-    status: WorkflowActionStatus.pending
   }
 }

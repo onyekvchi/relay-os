@@ -40,3 +40,13 @@ export const sampleITUser = {
   phonenumber: "+234 809 623 7816",
   role: UserRole.IT
 }
+
+export function createSampleUser(params: Partial<User> = {}): User {
+  return {
+    firstName: params.firstName ?? "Ciroma",
+    lastName: params.lastName ??  "Adekunle",
+    email: params.email ?? "c.adekunle@relayos.com",
+    phonenumber: params.phonenumber ?? "+234 809 623 7816",
+    role: params.role ?? UserRole.user
+  }
+}
