@@ -30,15 +30,15 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'Revert',
+      title: 'Relay OS',
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon/favicon.svg' },
         { rel: 'icon', type: 'image/x-icon', href: '/favicon/favicon.ico' },
         { rel: 'apple-touch-icon', href: '/favicon/apple-touch-icon.png' }
       ],
       meta: [
-        { name: 'description', content: 'Professional email for freelancers and small businesses' },
-        { name: 'theme-color', content: '#2d6a6a' }
+        { name: 'description', content: 'Request management and automation for corporates' },
+        { name: 'theme-color', content: '#000' }
       ]
     }
   },
