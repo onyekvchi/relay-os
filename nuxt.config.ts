@@ -17,7 +17,8 @@ export default defineNuxtConfig({
   modules: ['@pinia/nuxt', '@vueuse/nuxt', '@nuxt/ui', 'pinia-plugin-persistedstate/nuxt', '@nuxtjs/google-fonts'],
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1',
+      enableMSW: process.env.NUXT_PUBLIC_ENABLE_MSW !== 'false' // Default to true in dev
     }
   },
   typescript: {
