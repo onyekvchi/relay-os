@@ -6,8 +6,15 @@ definePageMeta({
 </script>
 
 <template>
-  <h2 class="text-2xl font-semibold tracking-tight">Requests</h2>
-  <USkeleton class="h-48" />
-  <USkeleton class="h-48" />
-  <USkeleton class="h-48" />
+  <PageHeader title="Requests">
+    <UButton size="lg" label="New Request" />
+  </PageHeader>
+  
+  
+  <!-- Table Empty state -->
+  <!-- Table Loading state -->
+  <!-- Table Data state -->
+  <!-- Table Filtering state -->
+
+  <PagePlaceholder />
 </template>
