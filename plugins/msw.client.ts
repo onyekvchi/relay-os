@@ -3,7 +3,7 @@ export default defineNuxtPlugin(async () => {
   const enableMSW = config.public.enableMSW !== false // Default to true in dev
 
   // Only enable MSW in development
-  if (process.env.NODE_ENV === 'development' && enableMSW) {
+  if (enableMSW) {
     const { worker } = await import('~/mocks/browser')
     const { seedDatabase } = await import('~/mocks/db')
 
