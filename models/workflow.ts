@@ -1,7 +1,10 @@
+import { sampleAdminUsers, sampleITUser, type User } from "@/models/user"
+
 export type Workflow = {
   name: string,
   fields: WorkflowField[],
-  steps: WorkflowStep[]
+  steps: WorkflowApprovalGroup[]
+  action: WorkflowAction
 }
 
 export type WorkflowField = {
@@ -12,16 +15,30 @@ export type WorkflowField = {
 }
 
 export enum WorkflowFieldType {
-  string, text, amount, integer, decimal, list, user, entity, 
+  string, text, amount, integer, decimal, list, user, entity,
 }
 
-export type WorkflowStep = {
-  type: WorkflowStepType,
-  actors: String[]
+export enum WorkflowApprovalStatus {
+  pending, approved
 }
 
-export enum WorkflowStepType {
-  approval, action
+export type WorkflowApproval = {
+  approver: User
+  status: WorkflowApprovalStatus
+}
+
+export type WorkflowApprovalGroup = {
+  status: WorkflowApprovalStatus,
+  approvals: WorkflowApproval[]
+}
+
+export enum WorkflowActionStatus {
+  pending, completed
+}
+
+export type WorkflowAction = {
+  status: WorkflowActionStatus,
+  actor: User
 }
 
 export const sampleWorkflow: Workflow = {
@@ -43,11 +60,24 @@ export const sampleWorkflow: Workflow = {
     type: WorkflowFieldType.text,
     description: "How are we justifying this change?"
   }],
-  steps: [{
-    type: WorkflowStepType.approval,
-    actors: ["Isma'il Shomala", "Kehinde Salaam"]
-  }, {
-    type: WorkflowStepType.action,
-    actors: ["Onyekachi Mbaike"]
-  }]
+  steps: [
+    {
+      status: WorkflowApprovalStatus.pending,
+      approvals: [{
+        approver: sampleAdminUsers[0],
+        status: WorkflowApprovalStatus.pending
+      }]
+    },
+    {
+      status: WorkflowApprovalStatus.pending,
+      approvals: [{
+        approver: sampleAdminUsers[1],
+        status: WorkflowApprovalStatus.pending
+      }]
+    }
+  ],
+  action: {
+    actor: sampleITUser,
+    status: WorkflowActionStatus.pending
+  }
 }
