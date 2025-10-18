@@ -6,6 +6,9 @@ definePageMeta({
 </script>
 
 <template>
-  <PageHeader title="Workflows" />
-  <PagePlaceholder />
+  <PageHeader title="Workflows">
+    <UButton size="lg" label="New Workflow" />
+  </PageHeader>
+
+  <WorkflowsData />
 </template>
