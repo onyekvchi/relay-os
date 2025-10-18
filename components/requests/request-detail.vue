@@ -2,7 +2,7 @@
   <div class="space-y-8">
     <!-- Header with Status -->
     <div class="flex items-center">
-      <div class="space-y-6">
+      <div class="space-y-4">
         <UBadge :color="getStatusColor(request.status)" variant="subtle">
           {{ request.status }}
         </UBadge>
@@ -21,7 +21,7 @@
       <!-- Left Column: Request Details -->
       <div class="w-1/3 space-y-8">
         <div class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold">Request Details</h2>
+          <h2 class="text-lg font-semibold tracking-tight">Request Details</h2>
 
           <div v-for="(field, index) in request.type.fields" :key="index" class="flex flex-col space-y-1">
             <label class="text-sm font-semibold">{{ field.label }}</label>
@@ -44,7 +44,7 @@
       <div class="w-1/3 space-y-4">
         <!-- Approvers -->
         <div class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold">Approvers</h2>
+          <h2 class="text-lg font-semibold tracking-tight">Approvers</h2>
           <div class="space-y-4">
             <div v-for="(step, stepIndex) in request.type.steps" :key="stepIndex" class="space-y-1">
               <div class="flex items-center justify-between">
@@ -73,7 +73,7 @@
 
         <!-- Action Taker -->
         <div class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold">Action Taker</h2>
+          <h2 class="text-lg font-semibold tracking-tight">Action Taker</h2>
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <UBadge color="neutral" variant="outline" size="lg">
@@ -89,7 +89,7 @@
 
         <!-- Followers -->
         <div v-if="request.observers.length > 0" class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold">Followers</h2>
+          <h2 class="text-lg font-semibold tracking-tight">Followers</h2>
           <div class="flex flex-wrap gap-2">
             <UBadge v-for="observer in request.observers" :key="observer.email" color="neutral" variant="outline"
               size="lg">
@@ -102,7 +102,7 @@
       <div class="w-1/3 space-y-4">
         <!-- Activity Log -->
         <div v-if="request.logs.length > 0" class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold">Activity</h2>
+          <h2 class="text-lg font-semibold tracking-tight">Activity</h2>
           <div class="space-y-4">
             <div v-for="(log, index) in request.logs" :key="index" class="flex space-x-3">
               <UAvatar :text="log.user.firstName[0] + log.user.lastName[0]" />
