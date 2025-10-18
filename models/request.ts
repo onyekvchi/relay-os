@@ -3,6 +3,7 @@ import { createSampleWorkflow, type Workflow } from "@/models/workflow"
 import { createSampleUser, sampleUser } from "@/models/user"
 
 export type Request = {
+  id: string,
   type: Workflow,
   initiator: User
   status: RequestStatus
@@ -31,6 +32,7 @@ export enum RequestAction {
 }
 
 export const sampleRequest: Request = {
+  id: "1",
   type: createSampleWorkflow(),
   initiator: sampleUser,
   status: RequestStatus.awaitingApproval,
@@ -39,8 +41,9 @@ export const sampleRequest: Request = {
   logs: []
 }
 
-export function createSampleRequests(): Request {
+export function createSampleRequests(id?: string): Request {
   return {
+    id: id || Math.random().toString(36).substring(7),
     type: createSampleWorkflow(),
     initiator: createSampleUser(),
     status: RequestStatus.awaitingApproval,

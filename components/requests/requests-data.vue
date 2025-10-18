@@ -4,22 +4,22 @@
 <!-- Table Filtering state -->
 <template>
   <div class=" border border-muted">
-    <UTable :data="requests" :columns="columns" />
+    <UTable :data="requests" :columns="columns" @select="handleRowClick" class="cursor-pointer" />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
-import { sampleRequest } from '@/models/request';
+import type { TableColumn, TableRow } from '@nuxt/ui'
+import { createSampleRequests } from '@/models/request';
 import type { Request } from '@/models/request';
-import { h, ref, computed } from 'vue'
+import { h, ref } from 'vue'
+import { routes } from '@/routes'
 
 const UBadge = resolveComponent('UBadge')
-
 const requests = ref<Request[]>([])
 
 for (let index = 0; index < 10; index++) {
-  requests.value.push(sampleRequest)
+  requests.value.push(createSampleRequests((index + 1).toString()))
 }
 
 const columns: TableColumn<Request>[] = [
@@ -57,5 +57,9 @@ const formatDate = (date: string) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+const handleRowClick = (row: TableRow<Request>) => {
+  navigateTo(routes.request(row.id))
 }
 </script>
