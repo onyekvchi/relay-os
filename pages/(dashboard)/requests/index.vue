@@ -7,7 +7,7 @@ definePageMeta({
 
 <template>
   <PageHeader title="Requests">
-    <UButton size="lg" label="New Request" />
+    <UButton size="lg" label="New Request" to="/requests/new" />
   </PageHeader>
 
   <RequestsData />

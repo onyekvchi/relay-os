@@ -48,25 +48,25 @@ const navigationItems = computed(() => {
   return [
     {
       label: "Requests",
-      to: "requests",
+      to: "/requests",
       icon: "",
       active: path.startsWith("/requests"),
     },
     {
       label: "Workflows",
-      to: "workflows",
+      to: "/workflows",
       icon: "",
       active: path.startsWith("/workflows"),
     },
     {
       label: "Metrics",
-      to: "metrics",
+      to: "/metrics",
       icon: "",
       active: path.startsWith("/metrics"),
     },
     {
       label: "Settings",
-      to: "settings",
+      to: "/settings",
       icon: "",
       active: path.startsWith("/settings"),
     }
