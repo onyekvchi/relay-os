@@ -8,8 +8,11 @@ export default defineAppConfig({
       loading: 'i-lucide-loader',
     },
     button: {
+      defaultVariants: {
+        size: 'lg'
+      },
       slots: {
-        base: 'shadow-none cursor-pointer'
+        base: 'shadow-none cursor-pointer font-semibold'
       },
       variants: {
         variant: {
@@ -18,6 +21,9 @@ export default defineAppConfig({
       },
     },
     input: {
+      defaultVariants: {
+        size: 'lg'
+      },
       slots: {
         base: 'shadow-xs'
       },
