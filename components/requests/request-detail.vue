@@ -46,7 +46,7 @@
         <div class="bg-white border border-muted p-4 space-y-4">
           <h2 class="text-lg font-semibold">Approvers</h2>
           <div class="space-y-4">
-            <div v-for="(step, stepIndex) in request.type.steps" :key="stepIndex" class="space-y-3">
+            <div v-for="(step, stepIndex) in request.type.steps" :key="stepIndex" class="space-y-1">
               <div class="flex items-center justify-between">
                 <h3 class="text-[10px] font-semibold uppercase text-muted">Level {{ stepIndex + 1 }}</h3>
                 <UBadge :color="step.status === WorkflowApprovalStatus.approved ? 'success' : 'neutral'" size="sm"
@@ -55,7 +55,7 @@
                 </UBadge>
               </div>
 
-              <div class="bg-elevated p-2 space-y-2">
+              <div class="bg-elevated p-1 space-y-2">
                 <div v-for="approval in step.approvals" :key="approval.approver.email"
                   class="flex items-center justify-between">
                   <UBadge color="neutral" variant="outline" size="lg">
@@ -105,9 +105,7 @@
           <h2 class="text-lg font-semibold">Activity</h2>
           <div class="space-y-4">
             <div v-for="(log, index) in request.logs" :key="index" class="flex space-x-3">
-              <div class="flex-shrink-0 w-8 h-8 bg-elevated flex items-center justify-center text-xs font-medium">
-                {{ log.user.firstName[0] }}{{ log.user.lastName[0] }}
-              </div>
+              <UAvatar :text="log.user.firstName[0] + log.user.lastName[0]" />
               <div class="flex-1 space">
                 <div class="flex items-center justify-between">
                   <p class="text-sm font-semibold">

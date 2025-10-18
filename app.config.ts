@@ -75,5 +75,10 @@ export default defineAppConfig({
         item: 'font-normal'
       }
     },
+    navigationMenu: {
+      slots: {
+        childLink: 'before:rounded-none'
+      }
+    }
   }
 })

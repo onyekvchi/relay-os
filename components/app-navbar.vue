@@ -7,8 +7,9 @@
         </NuxtLink>
         <UNavigationMenu orientation="horizontal" :items="navigationItems":ui="{
           list: 'gap-3',
-          link: 'px-3 py-2 text-sm gap-4',
-          linkLeadingIcon: 'size-4'
+          link: 'px-3 py-2 text-sm gap-4 before:rounded-none',
+          linkLeadingIcon: 'size-4',
+          childLink: 'before:rounded-none'
         }" />
       </div>
 
