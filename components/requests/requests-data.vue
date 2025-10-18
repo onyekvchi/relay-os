@@ -25,7 +25,7 @@ for (let index = 0; index < 10; index++) {
 const columns: TableColumn<Request>[] = [
   {
     accessorKey: 'type.name',
-    header: 'Request type',
+    header: 'Type',
   },
   {
     accessorFn: (row) => {
