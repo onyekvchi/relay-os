@@ -14,7 +14,7 @@
         <UButton variant="ghost" class="justify-end border border-default rounded-md p-2 hover:bg-elevated/50">
           <div class="flex gap-2 items-center text-left min-w-0 overflow-hidden">
             <UAvatar :text="userInitials" size="xs"></UAvatar>
-            <p class="text-xs font-normal opacity-75 truncate leading-tight text-muted">
+            <p class="text-xs font-normal truncate leading-tight text-muted">
               {{ userFirstName }}
             </p>
           </div>
@@ -76,7 +76,6 @@ const navigationItems = computed(() => {
 const userMenuItems = [
   [{
     label: 'Log out',
-    icon: 'i-heroicons-arrow-right-on-rectangle',
     onSelect: handleLogout
   }]
 ]

@@ -12,6 +12,18 @@ const authRoutes = {
 // App routes
 const appRoutes = {
   dashboard: "/dashboard",
+  workflows: "/workflows",
+  requests: "/requests",
+  request(id: string): string {
+    return `/requests/${id}`;
+  },
+  newRequest: "/requests/new",
+  workflow(id: string): string {
+    return `/workflows/${id}`;
+  },
+  newWorkflow: "/workflows/new",
+  settings: "/settings",
+  metrics: "/metrics",
 };
 
 export const routes = {
