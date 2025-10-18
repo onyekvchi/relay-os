@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-6 flex items-center bg-muted h-10 p-4">
+  <div class="flex items-center h-10">
     <UBreadcrumb :items="[{ label: 'Requests', to: routes.requests }, { label: 'New Request' }]"></UBreadcrumb>
   </div>
 
