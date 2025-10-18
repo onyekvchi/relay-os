@@ -4,24 +4,31 @@
 <!-- Table Filtering state -->
 <template>
   <div class=" border border-muted">
-    <UTable :data="workflows" :columns="columns" />
+    <UTable :data="workflows" :columns="columns" @select="handleRowClick" class="cursor-pointer" />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
+import type { TableColumn, TableRow } from '@nuxt/ui'
 import { createSampleWorkflow, type Workflow } from '@/models/workflow';
 import { h, ref, computed } from 'vue'
+import { routes } from '@/routes'
 
 const UBadge = resolveComponent('UBadge')
 
-const workflows = ref<Workflow[]>([])
+// Extended workflow type with ID
+type WorkflowWithId = Workflow & { id: string }
+
+const workflows = ref<WorkflowWithId[]>([])
 
 for (let index = 0; index < 2; index++) {
-  workflows.value.push(createSampleWorkflow())
+  workflows.value.push({
+    ...createSampleWorkflow(),
+    id: (index + 1).toString()
+  })
 }
 
-const columns: TableColumn<Workflow>[] = [
+const columns: TableColumn<WorkflowWithId>[] = [
   {
     accessorKey: 'name',
     header: 'Name',
@@ -47,4 +54,8 @@ const columns: TableColumn<Workflow>[] = [
     header: 'Executor'
   },
 ]
+
+const handleRowClick = (row: TableRow<WorkflowWithId>) => {
+  navigateTo(routes.workflow(row.id))
+}
 </script>
