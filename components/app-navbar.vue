@@ -2,7 +2,9 @@
   <header class="bg-white border-b border-muted">
     <div class="container mx-auto px-4 py-2 flex justify-between items-center">
       <div class="flex gap-6 items-center">
-        <h1 class="text-sm font-semibold font-mono tracking-tighter py-2 px-4 bg-primary text-inverted">relay-os</h1>
+        <NuxtLink :to="routes.dashboard">
+          <h1 class="text-sm font-semibold font-mono tracking-tighter py-2 px-4 bg-primary text-inverted">relay-os</h1>
+        </NuxtLink>
         <UNavigationMenu orientation="horizontal" :items="navigationItems":ui="{
           list: 'gap-3',
           link: 'px-3 py-2 text-sm gap-4',
@@ -48,27 +50,27 @@ const navigationItems = computed(() => {
   return [
     {
       label: "Requests",
-      to: "/requests",
+      to: routes.requests,
       icon: "",
-      active: path.startsWith("/requests"),
+      active: path.startsWith(routes.requests),
     },
     {
       label: "Workflows",
-      to: "/workflows",
+      to: routes.workflows,
       icon: "",
-      active: path.startsWith("/workflows"),
+      active: path.startsWith(routes.workflows),
     },
     {
       label: "Metrics",
-      to: "/metrics",
+      to: routes.metrics,
       icon: "",
-      active: path.startsWith("/metrics"),
+      active: path.startsWith(routes.metrics),
     },
     {
       label: "Settings",
-      to: "/settings",
+      to: routes.settings,
       icon: "",
-      active: path.startsWith("/settings"),
+      active: path.startsWith(routes.settings),
     }
   ]
 })
