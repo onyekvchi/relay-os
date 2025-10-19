@@ -4,7 +4,7 @@
       title="Team Management" 
       description="Manage team members, roles, and permissions" 
     />
-    <PagePlaceholder />
+    <SettingsTeamManagement />
   </div>
 </template>
 
