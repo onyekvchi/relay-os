@@ -23,10 +23,10 @@ const items: NavigationMenuItem[][] = [
       label: 'Profile',
       to: routes.settings.profile
     },
-    {
-      label: 'Preferences',
-      to: routes.settings.preferences
-    },
+    // {
+    //   label: 'Preferences',
+    //   to: routes.settings.preferences
+    // },
     // {
     //   label: 'Notifications',
     //   to: routes.settings.notifications

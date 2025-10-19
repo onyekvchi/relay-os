@@ -4,7 +4,7 @@
       title="Security" 
       description="Manage your password and security settings" 
     />
-    <PagePlaceholder />
+    <SettingsSecurityForm />
   </div>
 </template>
 
