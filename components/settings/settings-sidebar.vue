@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { routes } from '~/routes'
 
 const items: NavigationMenuItem[][] = [
   [
@@ -20,19 +21,19 @@ const items: NavigationMenuItem[][] = [
     },
     {
       label: 'Profile',
-      to: '/settings/profile'
+      to: routes.settings.profile
     },
     {
       label: 'Preferences',
-      to: '/settings/preferences'
+      to: routes.settings.preferences
     },
-    {
-      label: 'Notifications',
-      to: '/settings/notifications'
-    },
+    // {
+    //   label: 'Notifications',
+    //   to: routes.settings.notifications
+    // },
     {
       label: 'Security',
-      to: '/settings/security'
+      to: routes.settings.security
     }
   ],
   [
@@ -42,11 +43,11 @@ const items: NavigationMenuItem[][] = [
     },
     {
       label: 'General',
-      to: '/settings/workspace/general'
+      to: routes.settings.workspace.general
     },
     {
       label: 'Team',
-      to: '/settings/workspace/team'
+      to: routes.settings.workspace.team
     }
   ]
 ]
