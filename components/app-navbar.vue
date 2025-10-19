@@ -50,6 +50,12 @@ const navigationItems = computed(() => {
 
   return [
     {
+      label: "Dashboard",
+      to: routes.dashboard,
+      icon: "",
+      active: path.startsWith(routes.dashboard),
+    },
+    {
       label: "Requests",
       to: routes.requests,
       icon: "",
