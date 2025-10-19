@@ -119,7 +119,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
 import { createSampleWorkflow, WorkflowFieldType, type Workflow } from '@/models/workflow'
-import { sampleAdminUsers, type User } from '@/models/user'
+import { sampleAdminUsers, UserRole, type User } from '@/models/user'
 
 const loading = ref(false)
 
@@ -139,7 +139,7 @@ const workflows = ref<Workflow[]>([
 
 // Sample users for followers
 const followers = ref<User[] | undefined>([
-  { firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: 1 },
+  { firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.User },
   ...sampleAdminUsers
 ])
 

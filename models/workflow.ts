@@ -1,4 +1,4 @@
-import { sampleAdminUsers, sampleITUser, type User } from "@/models/user"
+import { sampleAdminUsers, sampleWorkspaceManager, type User } from "@/models/user"
 
 export type Workflow = {
   name: string,
@@ -78,7 +78,7 @@ export function createSampleWorkflow(): Workflow {
       }
     ],
     action: {
-      actor: sampleITUser,
+      actor: sampleWorkspaceManager,
       status: WorkflowActionStatus.pending
     }
   }

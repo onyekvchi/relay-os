@@ -192,7 +192,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { WorkflowFieldType, WorkflowApprovalStatus, WorkflowActionStatus, createSampleWorkflow, type Workflow } from '@/models/workflow'
-import { sampleAdminUsers, type User } from '@/models/user'
+import { sampleAdminUsers, UserRole, type User } from '@/models/user'
 
 const props = defineProps<{
   workflowId: string
@@ -202,7 +202,7 @@ const loading = ref(false)
 
 // Available users for approvers and action taker
 const availableUsers = ref<User[]>([
-  { firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: 1 },
+  { firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.User },
   ...sampleAdminUsers
 ])
 

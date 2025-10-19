@@ -7,7 +7,10 @@ export type User = {
 }
 
 export enum UserRole {
-  admin, user, finance, IT
+  Admin = "Admin",
+  WorkspaceManager = "Workspace Manager",
+  FinanceApprover = "Finance Approver",
+  User = "User"
 }
 
 export const sampleUser: User = {
@@ -15,7 +18,7 @@ export const sampleUser: User = {
   lastName: "Adekunle",
   email: "c.adekunle@relayos.com",
   phonenumber: "+234 809 623 7816",
-  role: UserRole.user
+  role: UserRole.User
 }
 
 export const sampleAdminUsers: User[] = [{
@@ -23,22 +26,22 @@ export const sampleAdminUsers: User[] = [{
   lastName: "Darego",
   email: "a.darego@relayos.com",
   phonenumber: "+234 809 623 7816",
-  role: UserRole.admin
+  role: UserRole.Admin
 },
 {
   firstName: "Ireti",
   lastName: "Doyle",
   email: "i.doyle@relayos.com",
   phonenumber: "+234 809 623 7816",
-  role: UserRole.admin
+  role: UserRole.Admin
 }]
 
-export const sampleITUser = {
+export const sampleWorkspaceManager = {
   firstName: "Raymond",
   lastName: "Tukpe",
   email: "r.tukpe@relayos.com",
   phonenumber: "+234 809 623 7816",
-  role: UserRole.IT
+  role: UserRole.WorkspaceManager
 }
 
 export function createSampleUser(params: Partial<User> = {}): User {
@@ -47,6 +50,6 @@ export function createSampleUser(params: Partial<User> = {}): User {
     lastName: params.lastName ??  "Adekunle",
     email: params.email ?? "c.adekunle@relayos.com",
     phonenumber: params.phonenumber ?? "+234 809 623 7816",
-    role: params.role ?? UserRole.user
+    role: params.role ?? UserRole.User
   }
 }
