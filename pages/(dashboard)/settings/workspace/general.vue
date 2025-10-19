@@ -4,7 +4,7 @@
       title="General" 
       description="Manage general workspace settings and configurations" 
     />
-    <PagePlaceholder />
+    <SettingsWorkspaceGeneralForm />
   </div>
 </template>
 
