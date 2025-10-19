@@ -22,7 +22,17 @@ const appRoutes = {
     return `/workflows/${id}`;
   },
   newWorkflow: "/workflows/new",
-  settings: "/settings",
+  settings: {
+    index: "/settings",
+    profile: "/settings/profile",
+    preferences: "/settings/preferences",
+    notifications: "/settings/notifications",
+    security: "/settings/security",
+    workspace: {
+      general: "/settings/workspace/general",
+      team: "/settings/workspace/team",
+    },
+  },
   metrics: "/metrics",
 };
 

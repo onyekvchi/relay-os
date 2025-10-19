@@ -61,17 +61,17 @@ const navigationItems = computed(() => {
       icon: "",
       active: path.startsWith(routes.workflows),
     },
-    {
-      label: "Metrics",
-      to: routes.metrics,
-      icon: "",
-      active: path.startsWith(routes.metrics),
-    },
+    // {
+    //   label: "Metrics",
+    //   to: routes.metrics,
+    //   icon: "",
+    //   active: path.startsWith(routes.metrics),
+    // },
     {
       label: "Settings",
-      to: routes.settings,
+      to: routes.settings.index,
       icon: "",
-      active: path.startsWith(routes.settings),
+      active: path.startsWith(routes.settings.index),
     }
   ]
 })
