@@ -5,7 +5,7 @@
   >
     <UIcon v-if="show" name="i-heroicons-arrow-left" class="mr-1" />
     <span v-if="prelabel" class="mr-1">{{ prelabel }}</span>
-    <span class="font-medium">{{ label }}</span>
+    <span class="font-semibold">{{ label }}</span>
   </NuxtLink>
 </template>
 

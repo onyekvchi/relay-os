@@ -1,6 +1,6 @@
 <template>
   <NuxtLink
-    class="text-primary hover:underline text-sm font-medium"
+    class="text-primary hover:underline text-sm font-semibold"
     :to="routes.forgotPassword"
   >
     Forgot password?

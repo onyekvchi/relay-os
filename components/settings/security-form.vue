@@ -10,7 +10,7 @@
       <div class="border border-muted rounded-lg p-4 space-y-6">
         <!-- Current Password -->
         <div class="space-y-2">
-          <label class="text-sm font-medium">Current password</label>
+          <label class="text-sm font-semibold">Current password</label>
           <p class="text-xs text-muted mb-2">You must confirm your current password to make changes.</p>
           <UInput 
             v-model="currentPassword"
@@ -30,7 +30,7 @@
 
         <!-- New Password -->
         <div class="space-y-2">
-          <label class="text-sm font-medium">New password</label>
+          <label class="text-sm font-semibold">New password</label>
           <p class="text-xs text-muted mb-2">Passwords must be at least 12 characters.</p>
           <UInput 
             v-model="newPassword"
@@ -50,7 +50,7 @@
 
         <!-- Confirm New Password -->
         <div class="space-y-2">
-          <label class="text-sm font-medium">Confirm new password</label>
+          <label class="text-sm font-semibold">Confirm new password</label>
           <p class="text-xs text-muted mb-2">Enter your new password again.</p>
           <UInput 
             v-model="confirmPassword"
@@ -80,7 +80,7 @@
       <div class="border border-muted rounded-lg p-4">
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1">
-            <h4 class="text-sm font-medium">Enable two-factor authentication</h4>
+            <h4 class="text-sm font-semibold">Enable two-factor authentication</h4>
             <p class="text-xs text-muted mt-1">
               When enabled you will be prompted for a secure, random token from your phone's authentication application.
             </p>
@@ -106,7 +106,7 @@
             <UIcon name="i-heroicons-computer-desktop" class="size-5" />
           </div>
           <div class="flex-1">
-            <p class="text-sm font-medium">Arc on macOS</p>
+            <p class="text-sm font-semibold">Arc on macOS</p>
             <p class="text-xs text-muted">
               <span class="text-primary">• Current session</span> · Alimosho, NG
             </p>
@@ -117,7 +117,7 @@
       <!-- Other Sessions -->
       <div class="border border-muted rounded-lg">
         <div class="p-4 flex items-center justify-between border-b border-muted">
-          <p class="text-sm font-medium">1 other session</p>
+          <p class="text-sm font-semibold">1 other session</p>
           <UButton variant="ghost" size="sm">
             Revoke all
           </UButton>
@@ -128,7 +128,7 @@
             <UIcon name="i-heroicons-computer-desktop" class="size-5" />
           </div>
           <div class="flex-1">
-            <p class="text-sm font-medium">Chrome on macOS</p>
+            <p class="text-sm font-semibold">Chrome on macOS</p>
             <p class="text-xs text-muted">Ikeja, NG · Last seen 29 days ago</p>
           </div>
         </div>

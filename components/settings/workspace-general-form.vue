@@ -6,11 +6,11 @@
         <h3 class="text-base font-semibold tracking-tight">Workspace</h3>
       </div>
 
-      <div class="border border-muted rounded-lg p-4">
+      <div>
         <!-- Logo -->
         <div class="flex items-center justify-between py-4 border-b border-muted">
           <div>
-            <label class="text-sm font-medium">Logo</label>
+            <label class="text-sm font-semibold">Logo</label>
             <p class="text-xs text-muted">Recommended size is 256x256px</p>
           </div>
           <div class="relative group cursor-pointer">
@@ -38,7 +38,7 @@
 
         <!-- Name -->
         <div class="flex items-center justify-between py-4 border-b border-muted">
-          <label class="text-sm font-medium">Name</label>
+          <label class="text-sm font-semibold">Name</label>
           <UInput 
             v-model="workspaceName" 
             class="w-48"
@@ -47,8 +47,8 @@
         </div>
 
         <!-- URL -->
-        <div class="flex items-center justify-between py-4">
-          <label class="text-sm font-medium">URL</label>
+        <div class="flex items-center justify-between py-4 border-b border-muted">
+          <label class="text-sm font-semibold">URL</label>
           <div class="flex items-center gap-2">
             <span class="text-sm text-muted">relayos.app/</span>
             <UInput 
@@ -70,7 +70,7 @@
       <div class="border border-muted rounded-lg p-4">
         <div class="flex items-center justify-between">
           <div class="flex-1">
-            <h4 class="text-sm font-medium">Delete workspace</h4>
+            <h4 class="text-sm font-semibold">Delete workspace</h4>
             <p class="text-xs text-muted mt-1">Schedule workspace to be permanently deleted</p>
           </div>
           <UButton 

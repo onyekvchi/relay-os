@@ -52,7 +52,7 @@ export default defineAppConfig({
       slots: {
         root: 'gap-8',
         list: 'px-0 gap-6',
-        trigger: 'font-medium cursor-pointer',
+        trigger: 'font-semibold cursor-pointer',
       },
       variants: {
         size: {

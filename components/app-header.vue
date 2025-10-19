@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center justify-between min-h-12">
     <div class="flex flex-col gap-2">
-      <div v-if="step" class="text-primary text-sm font-medium">
+      <div v-if="step" class="text-primary text-sm font-semibold">
         {{ step }} / 2 complete
       </div>
       

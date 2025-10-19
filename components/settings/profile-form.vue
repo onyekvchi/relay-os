@@ -2,7 +2,7 @@
   <div class="max-w-lg">
     <!-- Profile Picture -->
     <div class="flex items-center justify-between py-4 border-b border-muted">
-      <label class="text-sm font-medium">Profile picture</label>
+      <label class="text-sm font-semibold">Profile picture</label>
       <div class="relative group cursor-pointer">
         <input
           ref="fileInput"
@@ -28,7 +28,7 @@
 
     <!-- Email -->
     <div class="flex items-center justify-between py-4 border-b border-muted">
-      <label class="text-sm font-medium">Email</label>
+      <label class="text-sm font-semibold">Email</label>
       <div class="flex items-center gap-2">
         <span class="text-sm">{{ user?.email }}</span>
         <UButton variant="ghost" size="xs" icon="i-heroicons-pencil" />
@@ -37,7 +37,7 @@
 
     <!-- Full Name -->
     <div class="flex items-center justify-between py-4 border-b border-muted">
-      <label class="text-sm font-medium">Full name</label>
+      <label class="text-sm font-semibold">Full name</label>
       <UInput 
         v-model="fullName" 
         class="w-48"

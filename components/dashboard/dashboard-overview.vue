@@ -49,7 +49,7 @@
           <div class="flex items-center space-x-3 flex-1">
             <UAvatar :text="action.initiator.firstName[0] + action.initiator.lastName[0]" size="md" />
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium">
+              <p class="text-sm font-semibold">
                 {{ action.initiator.firstName }} {{ action.initiator.lastName }} created a
                 <span class="text-muted">{{ action.type.name }}</span>
                 for your approval
@@ -80,9 +80,9 @@
             <UAvatar :text="activity.user.firstName[0] + activity.user.lastName[0]" size="sm" />
             <div class="flex-1 min-w-0">
               <p class="text-sm leading-relaxed">
-                <span class="font-medium">{{ activity.user.firstName }} {{ activity.user.lastName }}</span>
+                <span class="font-semibold">{{ activity.user.firstName }} {{ activity.user.lastName }}</span>
                 <span class="text-muted ml-1">{{ getActionText(activity.action) }}</span>
-                <span class="font-medium ml-1">{{ activity.request.type.name }}</span>
+                <span class="font-semibold ml-1">{{ activity.request.type.name }}</span>
                 <span class="text-muted ml-1">· {{ formatTimeAgo(activity.createdAt) }}</span>
               </p>
             </div>
