@@ -4,7 +4,7 @@
       title="Profile" 
       description="Manage your personal information and profile settings" 
     />
-    <PagePlaceholder />
+    <SettingsProfileForm />
   </div>
 </template>
 
