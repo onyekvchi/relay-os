@@ -33,12 +33,12 @@
         <h3 class="font-semibold tracking-tight">
           Pending Actions
         </h3>
-        <UBadge v-if="pendingActions.length > 0" color="neutral" variant="soft">
+        <UBadge v-if="pendingActions && pendingActions.length > 0" color="neutral" variant="soft">
           {{ pendingActions.length }}
         </UBadge>
       </div>
 
-      <div v-if="pendingActions.length === 0" class="bg-white border border-muted p-8 rounded-lg text-center">
+      <div v-if="!pendingActions || pendingActions.length === 0" class="bg-white border border-muted p-8 rounded-lg text-center">
         <p class="text-muted">No pending actions</p>
       </div>
 
@@ -70,7 +70,7 @@
         <h3 class="font-semibold tracking-tight">Recent Activity</h3>
       </div>
 
-      <div v-if="recentActivity.length === 0" class="bg-white border border-muted p-8 rounded-lg text-center">
+      <div v-if="!recentActivity || recentActivity.length === 0" class="bg-white border border-muted p-8 rounded-lg text-center">
         <p class="text-muted">No recent activity</p>
       </div>
 
@@ -89,7 +89,7 @@
           </div>
         </div>
 
-        <button v-if="recentActivity.length >= 8"
+        <button v-if="recentActivity && recentActivity.length >= 8"
           class="w-full p-3 text-sm text-muted hover:text-foreground hover:bg-elevated transition-colors flex items-center justify-center space-x-2"
           @click="showMoreActivity">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -104,108 +104,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { Workflow } from '@/models/workflow'
-import type { User } from '@/models/user'
-import { RequestAction, type Request } from '@/models/request'
-import { mockWorkflow, mockUser, mockRequest } from '@/models/factories'
+import { RequestAction } from '@/models/request'
 import { routes } from '@/routes'
 
-// Extended workflow type with ID
-type WorkflowWithId = Workflow & { id: string }
+const { getPopularWorkflows, getPendingActions, getRecentActivity } = useDashboardApi()
 
-// Popular workflows for quick requests
-const popularWorkflows = ref<WorkflowWithId[]>([
-  {
-    ...mockWorkflow(),
-    id: '1',
-    name: 'Pricing Change Request'
-  },
-  {
-    ...mockWorkflow(),
-    id: '2',
-    name: 'Budget Approval Request'
-  },
-  {
-    ...mockWorkflow(),
-    id: '3',
-    name: 'Employee Onboarding'
-  }
-])
-
-// Pending actions - requests awaiting approval
-const pendingActions = ref<Request[]>([
-  {
-    ...mockRequest({ id: '1' }),
-    initiator: mockUser({ firstName: 'Matthew', lastName: 'Stafford' }),
-    type: { ...mockWorkflow(), name: 'Pricing Change Request' },
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() // 4 hours ago
-  },
-  {
-    ...mockRequest({ id: '2' }),
-    initiator: mockUser({ firstName: 'Lucas', lastName: 'Brahham' }),
-    type: { ...mockWorkflow(), name: 'Budget Approval Request' },
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() // 5 hours ago
-  },
-  {
-    ...mockRequest({ id: '3' }),
-    initiator: mockUser({ firstName: 'Diana', lastName: 'Williamson' }),
-    type: { ...mockWorkflow(), name: 'Employee Onboarding' },
-    createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString() // 7 hours ago
-  }
-])
-
-// Recent activity - request logs
-type ActivityLog = {
-  id: string
-  request: Request
-  action: RequestAction
-  user: User
-  createdAt: string
-}
-
-const recentActivity = ref<ActivityLog[]>([
-  {
-    id: '1',
-    request: {
-      ...mockRequest({ id: '1' }),
-      type: { ...mockWorkflow(), name: 'Pricing Change Request' }
-    },
-    action: RequestAction.approve,
-    user: mockUser({ firstName: 'Bailey', lastName: 'Kirk' }),
-    createdAt: new Date(Date.now() - 49 * 60 * 1000).toISOString() // 49 minutes ago
-  },
-  {
-    id: '2',
-    request: {
-      ...mockRequest({ id: '2' }),
-      type: { ...mockWorkflow(), name: 'Budget Approval Request' }
-    },
-    action: RequestAction.create,
-    user: mockUser({ firstName: 'Julian', lastName: 'Henson' }),
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
-  },
-  {
-    id: '3',
-    request: {
-      ...mockRequest({ id: '3' }),
-      type: { ...mockWorkflow(), name: 'Employee Onboarding' }
-    },
-    action: RequestAction.update,
-    user: mockUser({ firstName: 'Jessica', lastName: 'Giles' }),
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
-  },
-  {
-    id: '4',
-    request: {
-      ...mockRequest({ id: '4' }),
-      type: { ...mockWorkflow(), name: 'Pricing Change Request' }
-    },
-    action: RequestAction.create,
-    user: mockUser({ firstName: 'Matthew', lastName: 'Stafford' }),
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() // 4 hours ago
-  }
-])
+// Fetch dashboard data from three separate endpoints
+const { data: popularWorkflows, pending: workflowsLoading } = await getPopularWorkflows()
+const { data: pendingActions, pending: actionsLoading } = await getPendingActions()
+const { data: recentActivity, pending: activityLoading } = await getRecentActivity()
 
 function createRequest(workflowId: string) {
   // TODO: Navigate to request creation with pre-selected workflow

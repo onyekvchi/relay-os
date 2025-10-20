@@ -67,7 +67,7 @@ function buildWorkflowDTO(workflow: any): WorkflowDTO {
 /**
  * Helper to build RequestDTO with nested objects
  */
-function buildRequestDTO(request: any): RequestDTO {
+export function buildRequestDTO(request: any): RequestDTO {
   // Get workflow
   const workflow = db.workflow.findFirst({
     where: { id: { equals: request.workflow_id } },

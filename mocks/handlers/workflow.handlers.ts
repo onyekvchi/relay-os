@@ -8,7 +8,7 @@ const API_BASE = 'http://localhost:8000/api/v1'
 /**
  * Helper to build WorkflowDTO with nested objects
  */
-function buildWorkflowDTO(workflow: any): WorkflowDTO {
+export function buildWorkflowDTO(workflow: any): WorkflowDTO {
   // Get creator
   const creator = db.user.findFirst({
     where: { id: { equals: workflow.created_by_id } },

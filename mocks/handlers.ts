@@ -4,10 +4,14 @@ import type { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswor
 import { workflowHandlers } from './handlers/workflow.handlers'
 import { requestHandlers } from './handlers/request.handlers'
 import { userHandlers } from './handlers/user.handlers'
+import { dashboardHandlers } from './handlers/dashboard.handlers'
 
 const API_BASE = 'http://localhost:8000/api/v1'
 
 export const handlers = [
+  // Dashboard handlers
+  ...dashboardHandlers,
+
   // Workflow handlers
   ...workflowHandlers,
 
