@@ -46,7 +46,7 @@ const columns: TableColumn<Workflow & { id: string }>[] = [
   },
 ]
 
-const handleRowClick = (row: TableRow<Workflow & { id: string }>) => {
-  navigateTo(routes.workflow(row.id))
+const handleRowClick = (row: TableRow<Workflow>) => {
+  console.log(row.original.id)
 }
 </script>

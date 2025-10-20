@@ -46,21 +46,22 @@ function handleWorkflowLoaded(workflow: any) {
   isArchived.value = workflow.archived || false
 }
 
+const { archiveWorkflow } = useWorkflowsApi()
+
 async function handleArchive() {
   archiving.value = true
   
   try {
-    // TODO: Implement API call to archive/unarchive workflow
-    console.log(isArchived.value ? 'Unarchiving workflow:' : 'Archiving workflow:', workflowId)
+    await archiveWorkflow(workflowId)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    // Toggle archived state
     isArchived.value = !isArchived.value
     
     // Show success message
     // TODO: Add toast notification
     
+    // Navigate back to workflows list
+    await navigateTo(routes.workflows)
   } catch (error) {
     console.error('Error archiving workflow:', error)
     // TODO: Show error message

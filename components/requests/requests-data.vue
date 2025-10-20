@@ -58,6 +58,6 @@ const formatDate = (date: string) => {
 }
 
 const handleRowClick = (row: TableRow<Request>) => {
-  navigateTo(routes.request(row.id))
+  navigateTo(routes.request(row.original.id))
 }
 </script>

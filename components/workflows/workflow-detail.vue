@@ -1,10 +1,10 @@
 <template>
-  <div class="space-y-8">
+  <div v-if="workflow" class="space-y-8">
     <!-- Header with Status -->
     <div class="flex items-center justify-between">
       <div class="space-y-4">
-        <UBadge :color="workflow.archived ? 'neutral' : 'success'" variant="subtle">
-          {{ workflow.archived ? 'Archived' : 'Active' }}
+        <UBadge :color="workflow.isArchived ? 'neutral' : 'success'" variant="subtle">
+          {{ workflow.isArchived ? 'Archived' : 'Active' }}
         </UBadge>
         <div class="flex flex-col space-y-1">
           <h1 class="text-2xl font-semibold tracking-tight">{{ workflow.name }}</h1>
@@ -117,42 +117,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { WorkflowFieldType, type Workflow } from '@/models/workflow'
-import { mockWorkflow, mockUser } from '@/models/factories'
 
 const props = defineProps<{
   workflowId: string
 }>()
 
 const emit = defineEmits<{
-  workflowLoaded: [workflow: WorkflowWithMetadata]
+  workflowLoaded: [workflow: Workflow]
 }>()
 
-// Extended workflow type with additional metadata
-type WorkflowWithMetadata = Workflow & {
-  archived?: boolean
-  createdAt?: string
-  updatedAt?: string
-  createdBy?: any
-}
+const { getWorkflow } = useWorkflowsApi()
 
-// Sample workflow data - this would come from API
-const workflow = ref<WorkflowWithMetadata>({
-  ...mockWorkflow(),
-  archived: false,
-  createdAt: '2025-09-15T08:30:00.000000Z',
-  updatedAt: '2025-10-10T14:22:00.000000Z',
-  createdBy: mockUser()
-})
+// Fetch workflow data from API
+const { data: workflow, pending, error } = await getWorkflow(props.workflowId)
 
-// Sample usage statistics - this would come from API
+// Sample usage statistics - TODO: fetch from API when endpoint is available
 const usageStats = ref({
   totalRequests: 47,
   pendingRequests: 8,
   completedRequests: 35,
   avgApprovalTime: '2.3 days'
 })
+
+// Emit workflow data when loaded
+watch(workflow, (newWorkflow) => {
+  if (newWorkflow) {
+    emit('workflowLoaded', newWorkflow)
+  }
+}, { immediate: true })
 
 function formatDate(dateString?: string): string {
   if (!dateString) return 'N/A'
@@ -187,8 +181,4 @@ function getFieldTypeLabel(type: WorkflowFieldType): string {
   }
 }
 
-onMounted(() => {
-  // Emit workflow data to parent
-  emit('workflowLoaded', workflow.value)
-})
 </script>

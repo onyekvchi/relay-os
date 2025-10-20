@@ -234,10 +234,10 @@ export function seedDatabase() {
     initiator_id: regularUser.id,
     status: 'Awaiting Approval',
     field_values: JSON.stringify({
-      'field-1-1': 'Acme Corp',
-      'field-1-2': '5000',
-      'field-1-3': '4500',
-      'field-1-4': 'Customer requested a discount due to volume increase.'
+      'Merchant name': 'Acme Corp',
+      'Old price': '5000',
+      'New price': '4500',
+      'Reason for the change': 'Customer requested a discount due to volume increase.'
     }),
     observer_ids: JSON.stringify([]),
     created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
@@ -282,10 +282,10 @@ export function seedDatabase() {
     initiator_id: regularUser.id,
     status: 'Completed',
     field_values: JSON.stringify({
-      'field-1-1': 'TechStart Inc',
-      'field-1-2': '3000',
-      'field-1-3': '2500',
-      'field-1-4': 'Early adopter discount program.'
+      'Merchant name': 'TechStart Inc',
+      'Old price': '3000',
+      'New price': '2500',
+      'Reason for the change': 'Early adopter discount program.'
     }),
     observer_ids: JSON.stringify([]),
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago

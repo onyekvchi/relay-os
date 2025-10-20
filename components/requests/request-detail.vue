@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-8">
+  <div v-if="request" class="space-y-8">
     <!-- Header with Status -->
     <div class="flex items-center">
       <div class="space-y-4">
@@ -108,46 +108,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { RequestStatus, RequestAction, type Request } from '@/models/request'
+import { computed } from 'vue'
+import { RequestStatus, RequestAction } from '@/models/request'
 import { WorkflowFieldType, WorkflowApprovalStatus } from '@/models/workflow'
-import { mockRequest, mockUser } from '@/models/factories'
 
 const props = defineProps<{
   requestId: string
 }>()
 
-const sample: Request = {
-  ...mockRequest(),
-  logs: [{
-    id: 'log-1',
-    action: RequestAction.create,
-    userId: mockUser().id,
-    user: mockUser(),
-    comment: undefined,
-    createdAt: new Date().toISOString()
-  }, {
-    id: 'log-2',
-    action: RequestAction.approve,
-    userId: mockUser().id,
-    user: mockUser(),
-    comment: undefined,
-    createdAt: new Date().toISOString()
-  }],
-  observers: [mockUser({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com'
-  })]
-}
-const request = ref<Request>(sample)
+const { getRequest } = useRequestsApi()
 
-// Sample field values - these would come from the request data
-const fieldValues = ref<Record<number, any>>({
-  0: 'Acme Corp',
-  1: '5000',
-  2: '4500',
-  3: 'Customer requested a discount due to volume increase. This aligns with our enterprise pricing strategy.'
+// Fetch request data from API
+const { data: request, pending, error } = await getRequest(props.requestId)
+
+// Extract field values from request
+const fieldValues = computed(() => {
+  if (!request.value?.fieldValues) return {}
+  
+  // Convert field values object to indexed format for display
+  const values: Record<number, any> = {}
+  request.value.type.fields.forEach((field, index) => {
+    values[index] = request.value!.fieldValues[field.label]
+  })
+  return values
 })
 
 function formatDate(dateString: string): string {
@@ -211,19 +194,39 @@ function getActionText(action: RequestAction): string {
   }
 }
 
-// Action handlers - implement these based on your API
-function handleApprove() {
-  console.log('Approve request:', props.requestId)
-  // TODO: Implement approval logic
+// Action handlers
+const { approveRequest, rejectRequest, requestChanges } = useRequestsApi()
+
+async function handleApprove() {
+  if (!request.value) return
+  try {
+    // TODO: Get approval_id from current user's approval
+    await approveRequest(props.requestId, { approval_id: 'approval-id' })
+    // TODO: Refresh request data or show success toast
+  } catch (error) {
+    console.error('Error approving request:', error)
+  }
 }
 
-function handleRequestChanges() {
-  console.log('Request changes for:', props.requestId)
-  // TODO: Implement request changes logic
+async function handleRequestChanges() {
+  if (!request.value) return
+  try {
+    // TODO: Get approval_id from current user's approval
+    await requestChanges(props.requestId, { approval_id: 'approval-id', reason: 'Changes needed' })
+    // TODO: Refresh request data or show success toast
+  } catch (error) {
+    console.error('Error requesting changes:', error)
+  }
 }
 
-function handleReject() {
-  console.log('Reject request:', props.requestId)
-  // TODO: Implement rejection logic
+async function handleReject() {
+  if (!request.value) return
+  try {
+    // TODO: Get approval_id from current user's approval
+    await rejectRequest(props.requestId, { approval_id: 'approval-id', reason: 'Rejected' })
+    // TODO: Refresh request data or show success toast
+  } catch (error) {
+    console.error('Error rejecting request:', error)
+  }
 }
 </script>
