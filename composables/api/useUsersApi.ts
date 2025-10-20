@@ -21,7 +21,7 @@ export function useUsersApi() {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<UserDTO[]>) => {
         if (!response?.data) return []
-        return response.data.map((dto: UserDTO) => UserMapper.toDomain(dto))
+        return response.data.map((dto: UserDTO) => UserMapper.toModel(dto))
       },
     })
   }
@@ -35,7 +35,7 @@ export function useUsersApi() {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<UserDTO>) => {
         if (!response?.data) return null
-        return UserMapper.toDomain(response.data)
+        return UserMapper.toModel(response.data)
       },
     })
   }
@@ -48,7 +48,7 @@ export function useUsersApi() {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<UserDTO>) => {
         if (!response?.data) return null
-        return UserMapper.toDomain(response.data)
+        return UserMapper.toModel(response.data)
       },
     })
   }
@@ -62,7 +62,7 @@ export function useUsersApi() {
     return $api<ApiResponse<UserDTO>>(`/users/${id}`, {
       method: HttpMethod.PUT,
       body: data,
-    }).then(response => UserMapper.toDomain(response.data!))
+    }).then(response => UserMapper.toModel(response.data!))
   }
 
   return {

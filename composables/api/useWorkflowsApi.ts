@@ -21,7 +21,7 @@ export function useWorkflowsApi() {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<WorkflowDTO[]>) => {
         if (!response?.data) return []
-        return WorkflowMapper.toDomainList(response.data)
+        return WorkflowMapper.toModelList(response.data)
       },
     })
   }
@@ -35,7 +35,7 @@ export function useWorkflowsApi() {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<WorkflowDTO>) => {
         if (!response?.data) return null
-        return WorkflowMapper.toDomain(response.data)
+        return WorkflowMapper.toModel(response.data)
       },
     })
   }
@@ -48,7 +48,7 @@ export function useWorkflowsApi() {
     return $api<ApiResponse<WorkflowDTO>>('/workflows', {
       method: HttpMethod.POST,
       body: data,
-    }).then(response => WorkflowMapper.toDomain(response.data!))
+    }).then(response => WorkflowMapper.toModel(response.data!))
   }
 
   /**
@@ -60,7 +60,7 @@ export function useWorkflowsApi() {
     return $api<ApiResponse<WorkflowDTO>>(`/workflows/${id}`, {
       method: HttpMethod.PUT,
       body: data,
-    }).then(response => WorkflowMapper.toDomain(response.data!))
+    }).then(response => WorkflowMapper.toModel(response.data!))
   }
 
   /**

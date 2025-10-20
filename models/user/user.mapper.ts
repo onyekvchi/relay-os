@@ -8,7 +8,7 @@ export class UserMapper {
   /**
    * Convert API DTO to UI Model
    */
-  static toDomain(dto: UserDTO): User {
+  static toModel(dto: UserDTO): User {
     return {
       id: dto.id,
       firstName: dto.first_name,
@@ -51,7 +51,7 @@ export class UserMapper {
   /**
    * Convert array of DTOs to array of models
    */
-  static toDomainList(dtos: UserDTO[]): User[] {
-    return dtos.map(dto => this.toDomain(dto))
+  static toModelList(dtos: UserDTO[]): User[] {
+    return dtos.map(dto => this.toModel(dto))
   }
 }

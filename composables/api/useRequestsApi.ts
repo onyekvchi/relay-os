@@ -27,7 +27,7 @@ export function useRequestsApi() {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<RequestDTO[]>) => {
         if (!response?.data) return []
-        return RequestMapper.toDomainList(response.data)
+        return RequestMapper.toModelList(response.data)
       },
     })
   }
@@ -41,7 +41,7 @@ export function useRequestsApi() {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<RequestDTO>) => {
         if (!response?.data) return null
-        return RequestMapper.toDomain(response.data)
+        return RequestMapper.toModel(response.data)
       },
     })
   }
@@ -54,7 +54,7 @@ export function useRequestsApi() {
     return $api<ApiResponse<RequestDTO>>('/requests', {
       method: HttpMethod.POST,
       body: data,
-    }).then(response => RequestMapper.toDomain(response.data!))
+    }).then(response => RequestMapper.toModel(response.data!))
   }
 
   /**
@@ -66,7 +66,7 @@ export function useRequestsApi() {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/approve`, {
       method: HttpMethod.POST,
       body: data,
-    }).then(response => RequestMapper.toDomain(response.data!))
+    }).then(response => RequestMapper.toModel(response.data!))
   }
 
   /**
@@ -78,7 +78,7 @@ export function useRequestsApi() {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/reject`, {
       method: HttpMethod.POST,
       body: data,
-    }).then(response => RequestMapper.toDomain(response.data!))
+    }).then(response => RequestMapper.toModel(response.data!))
   }
 
   /**
@@ -90,7 +90,7 @@ export function useRequestsApi() {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/request-changes`, {
       method: HttpMethod.POST,
       body: data,
-    }).then(response => RequestMapper.toDomain(response.data!))
+    }).then(response => RequestMapper.toModel(response.data!))
   }
 
   /**
@@ -102,7 +102,7 @@ export function useRequestsApi() {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/complete`, {
       method: HttpMethod.POST,
       body: { comment },
-    }).then(response => RequestMapper.toDomain(response.data!))
+    }).then(response => RequestMapper.toModel(response.data!))
   }
 
   /**
@@ -114,7 +114,7 @@ export function useRequestsApi() {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/comment`, {
       method: HttpMethod.POST,
       body: { comment },
-    }).then(response => RequestMapper.toDomain(response.data!))
+    }).then(response => RequestMapper.toModel(response.data!))
   }
 
   return {

@@ -13,42 +13,42 @@ export class RequestMapper {
    * Convert API DTO to UI Model
    * DTO already includes all nested objects
    */
-  static toDomain(dto: RequestDTO): Request {
+  static toModel(dto: RequestDTO): Request {
     return {
       id: dto.id,
       workflowId: dto.workflow_id,
-      type: WorkflowMapper.toDomain(dto.workflow),  // ← Use nested workflow from DTO
+      type: WorkflowMapper.toModel(dto.workflow),  // ← Use nested workflow from DTO
       initiatorId: dto.initiator_id,
-      initiator: UserMapper.toDomain(dto.initiator),  // ← Use nested user from DTO
+      initiator: UserMapper.toModel(dto.initiator),  // ← Use nested user from DTO
       status: dto.status as RequestStatus,
       fieldValues: dto.field_values,
-      observers: dto.observers.map(u => UserMapper.toDomain(u)),  // ← Use nested users from DTO
+      observers: dto.observers.map(u => UserMapper.toModel(u)),  // ← Use nested users from DTO
       createdAt: dto.created_at,
       updatedAt: dto.updated_at,
-      logs: dto.logs.map(log => this.logToDomain(log)),
-      approvals: dto.approvals.map(approval => this.approvalToDomain(approval))
+      logs: dto.logs.map(log => this.logToModel(log)),
+      approvals: dto.approvals.map(approval => this.approvalToModel(approval))
     }
   }
 
-  private static logToDomain(dto: RequestLogDTO): RequestLog {
+  private static logToModel(dto: RequestLogDTO): RequestLog {
     return {
       id: dto.id,
       action: dto.action as unknown as RequestAction,
       userId: dto.user_id,
-      user: UserMapper.toDomain(dto.user),  // ← Use nested user from DTO
+      user: UserMapper.toModel(dto.user),  // ← Use nested user from DTO
       comment: dto.comment,
       createdAt: dto.created_at
     }
   }
 
-  private static approvalToDomain(dto: RequestApprovalDTO): RequestWorkflowApproval {
+  private static approvalToModel(dto: RequestApprovalDTO): RequestWorkflowApproval {
     return {
       id: dto.id,
       workflowApprovalId: dto.workflow_approval_id,
       workflowApproval: {
         id: dto.workflow_approval.id,
         approverId: dto.workflow_approval.approver_id,
-        approver: UserMapper.toDomain(dto.workflow_approval.approver),  // ← Use nested user from DTO
+        approver: UserMapper.toModel(dto.workflow_approval.approver),  // ← Use nested user from DTO
         order: dto.workflow_approval.order
       },
       status: dto.status as unknown as WorkflowApprovalStatus,
@@ -75,7 +75,7 @@ export class RequestMapper {
   /**
    * Convert array of DTOs to array of models
    */
-  static toDomainList(dtos: RequestDTO[]): Request[] {
-    return dtos.map(dto => this.toDomain(dto))
+  static toModelList(dtos: RequestDTO[]): Request[] {
+    return dtos.map(dto => this.toModel(dto))
   }
 }
