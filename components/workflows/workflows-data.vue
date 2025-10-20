@@ -47,6 +47,6 @@ const columns: TableColumn<Workflow & { id: string }>[] = [
 ]
 
 const handleRowClick = (row: TableRow<Workflow>) => {
-  console.log(row.original.id)
+  navigateTo(routes.workflow(row.original.id))
 }
 </script>
