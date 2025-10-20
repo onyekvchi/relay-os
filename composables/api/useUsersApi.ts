@@ -7,10 +7,8 @@ import { HttpMethod } from '@/types/api'
 /**
  * Composable for user API operations
  */
-
-const { $api } = useNuxtApp()
-
 export function useUsersApi() {
+  const { $api } = useNuxtApp()
   /**
    * Fetch all users with optional role filter
    * @param role - Optional role filter

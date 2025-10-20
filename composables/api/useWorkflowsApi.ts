@@ -7,10 +7,8 @@ import { HttpMethod } from '@/types/api'
 /**
  * Composable for workflow API operations
  */
-
-const { $api } = useNuxtApp()
-
 export function useWorkflowsApi() {
+  const { $api } = useNuxtApp()
   /**
    * Fetch all workflows
    * @param includeArchived - Whether to include archived workflows

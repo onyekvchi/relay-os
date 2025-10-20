@@ -13,10 +13,8 @@ import { HttpMethod } from '@/types/api'
 /**
  * Composable for request API operations
  */
-
-const { $api } = useNuxtApp()
-
 export function useRequestsApi() {
+  const { $api } = useNuxtApp()
   /**
    * Fetch all requests with optional filters
    * @param filters - Optional filters (status, workflow_id)
