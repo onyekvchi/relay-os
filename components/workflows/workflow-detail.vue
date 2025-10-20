@@ -46,11 +46,14 @@
             No approvals configured.
           </div>
 
-          <div class="space-y-2">
-            <div v-for="(approval, index) in workflow.approvals" :key="index" class="bg-elevated p-2">
-              <UBadge color="neutral" variant="outline" size="lg">
-                {{ approval.approver.firstName }} {{ approval.approver.lastName }}
-              </UBadge>
+          <div class="space-y-3">
+            <div v-for="(level, index) in approvalLevels" :key="index" class="space-y-2">
+              <div class="text-xs font-semibold text-muted uppercase">Level {{ index + 1 }}</div>
+              <div class="bg-elevated p-2 flex flex-wrap gap-2">
+                <UBadge v-for="approver in level" :key="approver.id" color="neutral" variant="outline" size="lg">
+                  {{ approver.firstName }} {{ approver.lastName }}
+                </UBadge>
+              </div>
             </div>
           </div>
         </div>
@@ -117,8 +120,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { WorkflowFieldType, type Workflow } from '@/models/workflow'
+import type { User } from '@/models/user'
 
 const props = defineProps<{
   workflowId: string
@@ -132,6 +136,25 @@ const { getWorkflow } = useWorkflowsApi()
 
 // Fetch workflow data from API
 const { data: workflow, pending, error } = await getWorkflow(props.workflowId)
+
+// Group approvals by order level
+const approvalLevels = computed(() => {
+  if (!workflow.value) return []
+  
+  const levels: Record<number, User[]> = {}
+  workflow.value.approvals.forEach(approval => {
+    if (!levels[approval.order]) {
+      levels[approval.order] = []
+    }
+    levels[approval.order].push(approval.approver)
+  })
+  
+  // Convert to array sorted by order
+  return Object.keys(levels)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map(order => levels[order])
+})
 
 // Sample usage statistics - TODO: fetch from API when endpoint is available
 const usageStats = ref({

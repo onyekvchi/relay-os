@@ -283,11 +283,15 @@ async function onSubmit() {
   loading.value = true
 
   try {
-    // Flatten approval steps into a single array of approver IDs
-    const approvalIds: string[] = []
-    state.steps.forEach(step => {
+    // Build approvals array with order information
+    // Approvers in the same step get the same order number
+    const approvals: Array<{ approver_id: string; order: number }> = []
+    state.steps.forEach((step, stepIndex) => {
       step.approvers.forEach(approver => {
-        approvalIds.push(approver.id)
+        approvals.push({
+          approver_id: approver.id,
+          order: stepIndex
+        })
       })
     })
 
@@ -301,7 +305,7 @@ async function onSubmit() {
         required: true,
         order: index
       })),
-      approval_ids: approvalIds,
+      approvals: approvals,
       action_actor_id: state.actionTaker.id
     })
 

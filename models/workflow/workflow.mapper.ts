@@ -72,9 +72,10 @@ export class WorkflowMapper {
         required: f.required,
         order: index
       })),
-      approval_ids: workflow.approvals
-        .sort((a, b) => a.order - b.order)
-        .map(a => a.approverId),
+      approvals: workflow.approvals.map(a => ({
+        approver_id: a.approverId,
+        order: a.order
+      })),
       action_actor_id: workflow.action.actorId
     }
   }

@@ -45,7 +45,7 @@ export interface CreateWorkflowRequest {
   name: string
   description?: string
   fields: Omit<WorkflowFieldDTO, 'id'>[]
-  approval_ids: string[]  // Array of user IDs in order
+  approvals: Array<{ approver_id: string; order: number }>  // Array of approvals with order
   action_actor_id: string
 }
 
@@ -53,7 +53,7 @@ export interface UpdateWorkflowRequest {
   name?: string
   description?: string
   fields?: Omit<WorkflowFieldDTO, 'id'>[]
-  approval_ids?: string[]
+  approvals?: Array<{ approver_id: string; order: number }>
   action_actor_id?: string
   is_archived?: boolean
 }

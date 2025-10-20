@@ -118,12 +118,12 @@ export const workflowHandlers = [
     const body = await request.json() as CreateWorkflowRequest
 
     // Validate required fields
-    if (!body.name || !body.fields || !body.approval_ids || !body.action_actor_id) {
+    if (!body.name || !body.fields || !body.approvals || !body.action_actor_id) {
       return HttpResponse.json(
         {
           success: false,
           message: 'Missing required fields',
-          errors: ['name, fields, approval_ids, and action_actor_id are required'],
+          errors: ['name, fields, approvals, and action_actor_id are required'],
         },
         { status: 422 }
       )
@@ -154,13 +154,13 @@ export const workflowHandlers = [
       })
     })
 
-    // Create approvals
-    body.approval_ids.forEach((approverId, index) => {
+    // Create approvals with order information
+    body.approvals.forEach((approval, index) => {
       db.workflowApproval.create({
         id: `approval-${workflowId}-${index}`,
         workflow_id: workflowId,
-        approver_id: approverId,
-        order: index,
+        approver_id: approval.approver_id,
+        order: approval.order,
       })
     })
 
@@ -232,19 +232,19 @@ export const workflowHandlers = [
     }
 
     // Update approvals if provided
-    if (body.approval_ids) {
+    if (body.approvals) {
       // Delete existing approvals
       db.workflowApproval.deleteMany({
         where: { workflow_id: { equals: id as string } },
       })
 
-      // Create new approvals
-      body.approval_ids.forEach((approverId, index) => {
+      // Create new approvals with order information
+      body.approvals.forEach((approval, index) => {
         db.workflowApproval.create({
           id: `approval-${id}-${Date.now()}-${index}`,
           workflow_id: id as string,
-          approver_id: approverId,
-          order: index,
+          approver_id: approval.approver_id,
+          order: approval.order,
         })
       })
     }
