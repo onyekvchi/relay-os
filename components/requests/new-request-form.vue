@@ -116,24 +116,18 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
 import { WorkflowFieldType, type Workflow } from '@/models/workflow'
-import { UserRole, type User } from '@/models/user'
-import { mockWorkflow, mockUser } from '~/models/factories'
+import type { User } from '@/models/user'
 
 const loading = ref(false)
+const { getWorkflows } = useWorkflowsApi()
+const { getUsers } = useUsersApi()
+const { createRequest } = useRequestsApi()
 
-// Sample workflows
-const workflows = ref<Workflow[]>([ 
-  mockWorkflow(),
-  mockWorkflow({ name: "Budget Approval Request" }),
-  mockWorkflow({ name: "Employee Onboarding" })
-])
+// Fetch workflows from API
+const { data: workflows, pending: workflowsLoading } = await getWorkflows()
 
-
-// Sample users for followers
-const followers = ref<User[] | undefined>([
-  mockUser({ firstName: "Jim", lastName: "Halpert", email: "j.halpert@relayos.com", phonenumber: "+234 801 000 0001", role: UserRole.User }),
-  mockUser({ firstName: "Dwight", lastName: "Schrute", email: "d.schrute@relayos.com", phonenumber: "+234 801 000 0002", role: UserRole.User }),
-])
+// Fetch users for followers
+const { data: followers, pending: followersLoading } = await getUsers()
 
 // Form state
 const selectedWorkflow = ref<Workflow | undefined>(undefined)
@@ -153,23 +147,29 @@ watch(selectedWorkflow, (newWorkflow) => {
 })
 
 async function onSubmit() {
+  if (!selectedWorkflow.value) return
+
   loading.value = true
 
   try {
-    // TODO: Implement API call to create request
-    console.log('Creating request:', {
-      workflow: selectedWorkflow.value,
-      followers: selectedFollowers.value,
-      fields: state.fields
+    // Map form fields to field_values object
+    const fieldValues: Record<string, any> = {}
+    selectedWorkflow.value.fields.forEach((field, index) => {
+      fieldValues[field.label] = state.fields[index]
     })
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Create request via API
+    await createRequest({
+      workflow_id: selectedWorkflow.value.id,
+      field_values: fieldValues,
+      observer_ids: selectedFollowers.value.map(f => f.id)
+    })
 
     // Navigate back to requests list
     await navigateTo('/requests')
   } catch (error) {
     console.error('Error creating request:', error)
+    // TODO: Show error toast
   } finally {
     loading.value = false
   }

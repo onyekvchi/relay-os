@@ -181,18 +181,15 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { WorkflowFieldType, WorkflowApprovalStatus, type WorkflowField } from '@/models/workflow'
-import { UserRole, type User } from '@/models/user'
-import { mockUser } from '@/models/factories'
+import { WorkflowFieldType } from '@/models/workflow'
+import type { User } from '@/models/user'
 
 const loading = ref(false)
+const { getUsers } = useUsersApi()
+const { createWorkflow } = useWorkflowsApi()
 
-// Available users for approvers and action taker
-const availableUsers = ref<User[]>([
-  mockUser({ firstName: "Jim", lastName: "Halpert", email: "j.halpert@relayos.com", phonenumber: "+234 801 000 0001", role: UserRole.User }),
-  mockUser({ firstName: "Dwight", lastName: "Schrute", email: "d.schrute@relayos.com", phonenumber: "+234 801 000 0002", role: UserRole.User }),
-  mockUser({ firstName: "Jan", lastName: "Levin", email: "j.levin@relayos.com", phonenumber: "+234 801 000 0003", role: UserRole.User }),
-])
+// Fetch available users for approvers and action taker
+const { data: availableUsers, pending: usersLoading } = await getUsers()
 
 // Field type options
 const fieldTypes = [
@@ -237,32 +234,38 @@ function removeApprovalStep(index: number) {
 }
 
 async function onSubmit() {
+  if (!state.actionTaker) return
+
   loading.value = true
 
   try {
-    // TODO: Implement API call to create workflow
-    console.log('Creating workflow:', {
-      name: state.name,
-      fields: state.fields,
-      steps: state.steps.map(step => ({
-        status: WorkflowApprovalStatus.pending,
-        approvals: step.approvers.map(approver => ({
-          approver,
-          status: WorkflowApprovalStatus.pending
-        }))
-      })),
-      action: {
-        actor: state.actionTaker
-      }
+    // Flatten approval steps into a single array of approver IDs
+    const approvalIds: string[] = []
+    state.steps.forEach(step => {
+      step.approvers.forEach(approver => {
+        approvalIds.push(approver.id)
+      })
     })
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Create workflow via API
+    await createWorkflow({
+      name: state.name,
+      fields: state.fields.map((field, index) => ({
+        label: field.label,
+        type: String(field.type),
+        description: field.description,
+        required: true,
+        order: index
+      })),
+      approval_ids: approvalIds,
+      action_actor_id: state.actionTaker.id
+    })
 
     // Navigate back to workflows list
     await navigateTo('/workflows')
   } catch (error) {
     console.error('Error creating workflow:', error)
+    // TODO: Show error toast
   } finally {
     loading.value = false
   }
