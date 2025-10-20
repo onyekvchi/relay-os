@@ -24,7 +24,14 @@ export type WorkflowField = {
 }
 
 export enum WorkflowFieldType {
-  string, text, amount, integer, decimal, list, user, entity,
+  string = 'string',
+  text = 'text',
+  amount = 'amount',
+  integer = 'integer',
+  decimal = 'decimal',
+  list = 'list',
+  user = 'user',
+  entity = 'entity',
 }
 
 export type WorkflowAction = {

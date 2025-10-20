@@ -29,7 +29,7 @@
           <div v-for="(field, index) in workflow.fields" :key="index" class="flex flex-col space-y-1">
             <label class="text-sm font-semibold">{{ field.label }}</label>
             <div class="text-sm bg-elevated py-2 px-3 space-y-1">
-              <p class="text-xs text-muted">Type: {{ field.type.toString() }}</p>
+              <p class="text-xs text-muted">Type: {{ getFieldTypeLabel(field.type) }}</p>
               <p v-if="field.description" class="text-xs">{{ field.description }}</p>
             </div>
           </div>

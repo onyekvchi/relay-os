@@ -34,7 +34,7 @@ export class WorkflowMapper {
     return {
       id: dto.id,
       label: dto.label,
-      type: dto.type as unknown as WorkflowFieldType,
+      type: dto.type as WorkflowFieldType,
       description: dto.description,
       required: dto.required,
       order: dto.order
