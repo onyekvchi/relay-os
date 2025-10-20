@@ -11,25 +11,22 @@
 <script setup lang="ts">
 import type { TableColumn, TableRow } from '@nuxt/ui'
 import type { Workflow } from '@/models/workflow'
-import { mockWorkflow } from '@/models/factories'
-import { h, ref, computed } from 'vue'
+import { WorkflowMapper } from '@/models/workflow/workflow.mapper'
 import { routes } from '@/routes'
 
 const UBadge = resolveComponent('UBadge')
+const { getWorkflows } = useWorkflowsApi()
 
-// Extended workflow type with ID
-type WorkflowWithId = Workflow & { id: string }
+// Fetch workflows from API
+const { data: workflowsResponse, pending, error } = await getWorkflows()
 
-const workflows = ref<WorkflowWithId[]>([])
+// Map DTO to domain model using mapper
+const workflows = computed(() => {
+  if (!workflowsResponse.value?.data) return []
+  return WorkflowMapper.toDomainList(workflowsResponse.value.data)
+})
 
-for (let index = 0; index < 2; index++) {
-  workflows.value.push({
-    ...mockWorkflow(),
-    id: (index + 1).toString()
-  })
-}
-
-const columns: TableColumn<WorkflowWithId>[] = [
+const columns: TableColumn<Workflow & { id: string }>[] = [
   {
     accessorKey: 'name',
     header: 'Name',
@@ -56,7 +53,7 @@ const columns: TableColumn<WorkflowWithId>[] = [
   },
 ]
 
-const handleRowClick = (row: TableRow<WorkflowWithId>) => {
+const handleRowClick = (row: TableRow<Workflow & { id: string }>) => {
   navigateTo(routes.workflow(row.id))
 }
 </script>
