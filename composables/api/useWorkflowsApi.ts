@@ -44,7 +44,7 @@ export function useWorkflowsApi() {
    * Create a new workflow
    * @param data - Workflow creation data
    */
-  const createWorkflow = async (data: CreateWorkflowRequest) => {
+  const createWorkflow = (data: CreateWorkflowRequest) => {
     return $api<ApiResponse<WorkflowDTO>>('/workflows', {
       method: HttpMethod.POST,
       body: data,
@@ -56,7 +56,7 @@ export function useWorkflowsApi() {
    * @param id - Workflow ID
    * @param data - Workflow update data
    */
-  const updateWorkflow = async (id: string, data: UpdateWorkflowRequest) => {
+  const updateWorkflow = (id: string, data: UpdateWorkflowRequest) => {
     return $api<ApiResponse<WorkflowDTO>>(`/workflows/${id}`, {
       method: HttpMethod.PUT,
       body: data,
@@ -67,7 +67,7 @@ export function useWorkflowsApi() {
    * Archive a workflow (soft delete)
    * @param id - Workflow ID
    */
-  const archiveWorkflow = async (id: string) => {
+  const archiveWorkflow = (id: string) => {
     return $api<ApiResponse>(`/workflows/${id}`, {
       method: HttpMethod.DELETE,
     })

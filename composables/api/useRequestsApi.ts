@@ -50,7 +50,7 @@ export function useRequestsApi() {
    * Create a new request
    * @param data - Request creation data
    */
-  const createRequest = async (data: CreateRequestRequest) => {
+  const createRequest = (data: CreateRequestRequest) => {
     return $api<ApiResponse<RequestDTO>>('/requests', {
       method: HttpMethod.POST,
       body: data,
@@ -62,7 +62,7 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param data - Approval data (approval_id, optional comment)
    */
-  const approveRequest = async (id: string, data: ApproveRequestRequest) => {
+  const approveRequest = (id: string, data: ApproveRequestRequest) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/approve`, {
       method: HttpMethod.POST,
       body: data,
@@ -74,7 +74,7 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param data - Rejection data (approval_id, reason)
    */
-  const rejectRequest = async (id: string, data: RejectRequestRequest) => {
+  const rejectRequest = (id: string, data: RejectRequestRequest) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/reject`, {
       method: HttpMethod.POST,
       body: data,
@@ -86,7 +86,7 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param data - Request changes data (reason)
    */
-  const requestChanges = async (id: string, data: RequestChangesRequest) => {
+  const requestChanges = (id: string, data: RequestChangesRequest) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/request-changes`, {
       method: HttpMethod.POST,
       body: data,
@@ -98,7 +98,7 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param comment - Optional completion comment
    */
-  const completeRequest = async (id: string, comment?: string) => {
+  const completeRequest = (id: string, comment?: string) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/complete`, {
       method: HttpMethod.POST,
       body: { comment },
@@ -110,7 +110,7 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param comment - Comment text
    */
-  const addComment = async (id: string, comment: string) => {
+  const addComment = (id: string, comment: string) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/comment`, {
       method: HttpMethod.POST,
       body: { comment },

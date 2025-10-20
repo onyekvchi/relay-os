@@ -58,7 +58,7 @@ export function useUsersApi() {
    * @param id - User ID
    * @param data - User update data
    */
-  const updateUser = async (id: string, data: UpdateUserRequest) => {
+  const updateUser = (id: string, data: UpdateUserRequest) => {
     return $api<ApiResponse<UserDTO>>(`/users/${id}`, {
       method: HttpMethod.PUT,
       body: data,
