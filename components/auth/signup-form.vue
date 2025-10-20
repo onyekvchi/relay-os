@@ -8,12 +8,21 @@
     />
 
     <div class="space-y-6">
-      <!-- Full Name -->
-      <UFormField label="Full Name" name="name" required>
+      <!-- First Name -->
+      <UFormField label="First Name" name="first_name" required>
         <UInput
           class="w-full"
-          v-model="state.name"
-          placeholder="Enter your full name"
+          v-model="state.first_name"
+          placeholder="Enter your first name"
+        />
+      </UFormField>
+
+      <!-- Last Name -->
+      <UFormField label="Last Name" name="last_name" required>
+        <UInput
+          class="w-full"
+          v-model="state.last_name"
+          placeholder="Enter your last name"
         />
       </UFormField>
 
@@ -69,7 +78,8 @@ const loading = ref(false)
 const schema = RegisterSchema
 
 const state = reactive<Partial<RegisterFormFields>>({
-  name: '',
+  first_name: '',
+  last_name: '',
   email: '',
   password: '',
   password_confirmation: '',

@@ -1,10 +1,23 @@
 import { http, HttpResponse } from 'msw'
 import { db } from './db'
 import type { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '~/types/auth'
+import { workflowHandlers } from './handlers/workflow.handlers'
+import { requestHandlers } from './handlers/request.handlers'
+import { userHandlers } from './handlers/user.handlers'
 
 const API_BASE = 'http://localhost:8000/api/v1'
 
 export const handlers = [
+  // Workflow handlers
+  ...workflowHandlers,
+
+  // Request handlers
+  ...requestHandlers,
+
+  // User handlers
+  ...userHandlers,
+
+  // Auth handlers
   // Login
   http.post(`${API_BASE}/login`, async ({ request }) => {
     const body = await request.json() as LoginRequest & { device_name?: string }
@@ -73,10 +86,16 @@ export const handlers = [
     }
 
     // Create new user
+    const firstName = body.first_name || 'User'
+    const lastName = body.last_name || 'Account'
+    
     const user = db.user.create({
       id: `user-${Date.now()}`,
-      name: body.name,
+      first_name: firstName,
+      last_name: lastName,
       email: body.email,
+      phone_number: '+234 800 000 0000', // Default phone
+      role: 'User', // Default role
       email_verified_at: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
