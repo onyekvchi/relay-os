@@ -10,13 +10,13 @@ import type { UserDTO } from '../user/user.dto'
 export interface RequestDTO {
   id: string
   workflow_id: string
-  workflow: WorkflowDTO           // ← Backend includes full workflow object
+  workflow: WorkflowDTO
   initiator_id: string
-  initiator: UserDTO              // ← Backend includes full user object
+  initiator: UserDTO
   status: string
   field_values: Record<string, any>
   observer_ids: string[]
-  observers: UserDTO[]            // ← Backend includes full user objects
+  observers: UserDTO[]
   created_at: string
   updated_at: string
   logs: RequestLogDTO[]
@@ -27,7 +27,7 @@ export interface RequestLogDTO {
   id: string
   action: string
   user_id: string
-  user: UserDTO                   // ← Backend includes full user object
+  user: UserDTO
   comment?: string
   created_at: string
 }
@@ -35,7 +35,7 @@ export interface RequestLogDTO {
 export interface RequestApprovalDTO {
   id: string
   workflow_approval_id: string
-  workflow_approval: {            // ← Backend includes the workflow approval details
+  workflow_approval: {
     id: string
     approver_id: string
     approver: UserDTO

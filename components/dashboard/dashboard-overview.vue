@@ -12,7 +12,7 @@
               </h4>
               <p class="text-sm text-muted">
                 {{ workflow.fields.length }} field{{ workflow.fields.length !== 1 ? 's' : '' }} ·
-                {{ workflow.steps.length }} approval{{ workflow.steps.length !== 1 ? 's' : '' }}
+                {{ workflow.approvals.length }} approval{{ workflow.approvals.length !== 1 ? 's' : '' }}
               </p>
             </div>
             <div class="text-muted group-hover:text-primary transition-colors">

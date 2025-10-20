@@ -46,27 +46,14 @@
         <div class="bg-white border border-muted p-4 space-y-4">
           <h2 class="text-lg font-semibold tracking-tight">Approvers</h2>
           <div class="space-y-4">
-            <div v-for="(step, stepIndex) in request.type.steps" :key="stepIndex" class="space-y-1">
-              <div class="flex items-center justify-between">
-                <h3 class="text-[10px] font-semibold uppercase text-muted">Level {{ stepIndex + 1 }}</h3>
-                <UBadge :color="step.status === WorkflowApprovalStatus.approved ? 'success' : 'neutral'" size="sm"
-                  variant="subtle">
-                  {{ step.status === WorkflowApprovalStatus.approved ? 'Approved' : 'Pending' }}
-                </UBadge>
-              </div>
-
-              <div class="bg-elevated p-1 space-y-2">
-                <div v-for="approval in step.approvals" :key="approval.approver.email"
-                  class="flex items-center justify-between">
-                  <UBadge color="neutral" variant="outline" size="lg">
-                    {{ approval.approver.firstName }} {{ approval.approver.lastName }}
-                  </UBadge>
-                  <UBadge v-if="approval.status === WorkflowApprovalStatus.approved" color="success" size="sm"
-                    variant="subtle">
-                    Approved
-                  </UBadge>
-                </div>
-              </div>
+            <div v-for="(approval, index) in request.approvals" :key="index" class="bg-elevated p-2 flex items-center justify-between">
+              <UBadge color="neutral" variant="outline" size="lg">
+                {{ approval.workflowApproval.approver.firstName }} {{ approval.workflowApproval.approver.lastName }}
+              </UBadge>
+              <UBadge :color="approval.status === WorkflowApprovalStatus.approved ? 'success' : 'neutral'" size="sm"
+                variant="subtle">
+                {{ approval.status }}
+              </UBadge>
             </div>
           </div>
         </div>
@@ -75,15 +62,12 @@
         <div class="bg-white border border-muted p-4 space-y-4">
           <h2 class="text-lg font-semibold tracking-tight">Action Taker</h2>
           <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <UBadge color="neutral" variant="outline" size="lg">
-                {{ request.type.action.actor.firstName }} {{ request.type.action.actor.lastName }}
-              </UBadge>
-              <UBadge :color="request.type.action.status === WorkflowActionStatus.completed ? 'success' : 'neutral'"
-                size="sm" variant="subtle">
-                {{ request.type.action.status === WorkflowActionStatus.completed ? 'Completed' : 'Pending' }}
-              </UBadge>
-            </div>
+            <UBadge color="neutral" variant="outline" size="lg">
+              {{ request.type.action.actor.firstName }} {{ request.type.action.actor.lastName }}
+            </UBadge>
+            <p class="text-xs text-muted">
+              Responsible for executing the action after all approvals are complete
+            </p>
           </div>
         </div>
 
@@ -126,7 +110,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RequestStatus, RequestAction, type Request } from '@/models/request'
-import { WorkflowFieldType, WorkflowApprovalStatus, WorkflowActionStatus } from '@/models/workflow'
+import { WorkflowFieldType, WorkflowApprovalStatus } from '@/models/workflow'
 import { mockRequest, mockUser } from '@/models/factories'
 
 const props = defineProps<{
@@ -136,12 +120,18 @@ const props = defineProps<{
 const sample: Request = {
   ...mockRequest(),
   logs: [{
+    id: 'log-1',
     action: RequestAction.create,
+    userId: mockUser().id,
     user: mockUser(),
+    comment: undefined,
     createdAt: new Date().toISOString()
   }, {
+    id: 'log-2',
     action: RequestAction.approve,
+    userId: mockUser().id,
     user: mockUser(),
+    comment: undefined,
     createdAt: new Date().toISOString()
   }],
   observers: [mockUser({

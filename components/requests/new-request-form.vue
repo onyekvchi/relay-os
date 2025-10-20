@@ -94,13 +94,10 @@
     <div class="w-md space-y-8">
       <!-- Approvers (auto-populated from workflow) -->
       <UFormField v-if="selectedWorkflow" label="Approvers" name="approvers">
-        <div class="flex flex-col bg-elevated p-3 space-y-3 pb-4">
-          <div v-for="(step, stepIndex) in selectedWorkflow.steps" :key="stepIndex" class="space-y-1">
-            <h3 class="text-[10px] font-semibold uppercase text-muted">Level {{ stepIndex + 1 }}</h3>
-            <UBadge v-for="approval in step.approvals" :key="approval.approver.email" color="neutral" variant="outline" size="lg">
-              {{ approval.approver.firstName }} {{ approval.approver.lastName }}
-            </UBadge>
-          </div>
+        <div class="flex flex-wrap gap-2 p-3 bg-elevated">
+          <UBadge v-for="approval in selectedWorkflow.approvals" :key="approval.approver.email" color="neutral" variant="outline" size="lg">
+            {{ approval.approver.firstName }} {{ approval.approver.lastName }}
+          </UBadge>
         </div>
       </UFormField>
 

@@ -10,8 +10,8 @@
 
 <script setup lang="ts">
 import type { TableColumn, TableRow } from '@nuxt/ui'
+import type { Request } from '@/models/request'
 import { mockRequest } from '@/models/factories'
-import type { Request } from '@/models/request';
 import { h, ref } from 'vue'
 import { routes } from '@/routes'
 

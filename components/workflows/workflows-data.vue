@@ -42,7 +42,7 @@ const columns: TableColumn<WorkflowWithId>[] = [
   },
   {
     accessorFn: (row) => {
-      return row.steps.length
+      return row.approvals.length
     },
     header: 'Approvals'
   },

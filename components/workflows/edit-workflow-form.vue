@@ -191,9 +191,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { WorkflowFieldType, WorkflowApprovalStatus, WorkflowActionStatus, type Workflow } from '@/models/workflow'
+import { WorkflowFieldType, WorkflowApprovalStatus } from '@/models/workflow'
 import { UserRole, type User } from '@/models/user'
-import { mockWorkflow } from '@/models/factories'
+import { mockWorkflow, mockUser } from '@/models/factories'
 
 const props = defineProps<{
   workflowId: string
@@ -203,9 +203,9 @@ const loading = ref(false)
 
 // Available users for approvers and action taker
 const availableUsers = ref<User[]>([
-  { firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.User },
-  { firstName: "Agbani", lastName: "Darego", email: "a.darego@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.Admin },
-  { firstName: "Ireti", lastName: "Doyle", email: "i.doyle@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.Admin },
+  mockUser({ firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.User }),
+  mockUser({ firstName: "Agbani", lastName: "Darego", email: "a.darego@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.Admin }),
+  mockUser({ firstName: "Ireti", lastName: "Doyle", email: "i.doyle@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.Admin }),
 ])
 
 // Field type options
@@ -239,9 +239,14 @@ function loadWorkflow() {
   
   state.name = workflow.name
   state.fields = workflow.fields.map(f => ({ ...f }))
-  state.steps = workflow.steps.map(step => ({
-    approvers: step.approvals.map(a => a.approver)
-  }))
+  // Group approvals by order to create steps
+  const approvalsByOrder = workflow.approvals.reduce((acc, approval) => {
+    if (!acc[approval.order]) acc[approval.order] = []
+    acc[approval.order].push(approval.approver)
+    return acc
+  }, {} as Record<number, typeof workflow.approvals[0]['approver'][]>)
+  
+  state.steps = Object.values(approvalsByOrder).map(approvers => ({ approvers }))
   state.actionTaker = workflow.action.actor
 }
 
@@ -288,8 +293,7 @@ async function onSubmit() {
         }))
       })),
       action: {
-        actor: state.actionTaker,
-        status: WorkflowActionStatus.pending
+        actor: state.actionTaker
       }
     })
 

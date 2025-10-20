@@ -181,7 +181,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { WorkflowFieldType, WorkflowApprovalStatus, WorkflowActionStatus, type WorkflowField } from '@/models/workflow'
+import { WorkflowFieldType, WorkflowApprovalStatus, type WorkflowField } from '@/models/workflow'
 import { UserRole, type User } from '@/models/user'
 import { mockUser } from '@/models/factories'
 
@@ -252,8 +252,7 @@ async function onSubmit() {
         }))
       })),
       action: {
-        actor: state.actionTaker,
-        status: WorkflowActionStatus.pending
+        actor: state.actionTaker
       }
     })
 

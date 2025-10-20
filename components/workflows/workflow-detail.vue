@@ -10,7 +10,7 @@
           <h1 class="text-2xl font-semibold tracking-tight">{{ workflow.name }}</h1>
           <p class="text-sm text-muted">
             {{ workflow.fields.length }} field{{ workflow.fields.length !== 1 ? 's' : '' }} · 
-            {{ workflow.steps.length }} approval level{{ workflow.steps.length !== 1 ? 's' : '' }}
+            {{ workflow.approvals.length }} approval{{ workflow.approvals.length !== 1 ? 's' : '' }}
           </p>
         </div>
       </div>
@@ -42,21 +42,15 @@
         <div class="bg-white border border-muted p-4 space-y-4">
           <h2 class="text-lg font-semibold tracking-tight">Approval Levels</h2>
           
-          <div v-if="workflow.steps.length === 0" class="text-sm text-muted py-4">
-            No approval levels configured.
+          <div v-if="workflow.approvals.length === 0" class="text-sm text-muted py-4">
+            No approvals configured.
           </div>
 
-          <div class="space-y-4">
-            <div v-for="(step, stepIndex) in workflow.steps" :key="stepIndex" class="space-y-1">
-              <h3 class="text-[10px] font-semibold uppercase text-muted">Level {{ stepIndex + 1 }}</h3>
-
-              <div class="bg-elevated p-2 space-y-2">
-                <div v-for="approval in step.approvals" :key="approval.approver.email">
-                  <UBadge color="neutral" variant="outline" size="lg">
-                    {{ approval.approver.firstName }} {{ approval.approver.lastName }}
-                  </UBadge>
-                </div>
-              </div>
+          <div class="space-y-2">
+            <div v-for="(approval, index) in workflow.approvals" :key="index" class="bg-elevated p-2">
+              <UBadge color="neutral" variant="outline" size="lg">
+                {{ approval.approver.firstName }} {{ approval.approver.lastName }}
+              </UBadge>
             </div>
           </div>
         </div>
