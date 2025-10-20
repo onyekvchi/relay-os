@@ -124,8 +124,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { createSampleWorkflow, WorkflowFieldType, type Workflow } from '@/models/workflow'
-import { createSampleUser } from '@/models/user'
+import { WorkflowFieldType, type Workflow } from '@/models/workflow'
+import { mockWorkflow, mockUser } from '@/models/factories'
 
 const props = defineProps<{
   workflowId: string
@@ -145,11 +145,11 @@ type WorkflowWithMetadata = Workflow & {
 
 // Sample workflow data - this would come from API
 const workflow = ref<WorkflowWithMetadata>({
-  ...createSampleWorkflow(),
+  ...mockWorkflow(),
   archived: false,
   createdAt: '2025-09-15T08:30:00.000000Z',
   updatedAt: '2025-10-10T14:22:00.000000Z',
-  createdBy: createSampleUser()
+  createdBy: mockUser()
 })
 
 // Sample usage statistics - this would come from API

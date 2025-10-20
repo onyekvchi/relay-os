@@ -118,29 +118,24 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import { createSampleWorkflow, WorkflowFieldType, type Workflow } from '@/models/workflow'
-import { sampleAdminUsers, UserRole, type User } from '@/models/user'
+import { WorkflowFieldType, type Workflow } from '@/models/workflow'
+import { UserRole, type User } from '@/models/user'
+import { mockWorkflow, mockUser } from '~/models/factories'
 
 const loading = ref(false)
 
 // Sample workflows
-const workflows = ref<Workflow[]>([
-  createSampleWorkflow(),
-  {
-    ...createSampleWorkflow(),
-    name: "Budget Approval Request"
-  },
-  {
-    ...createSampleWorkflow(),
-    name: "Employee Onboarding"
-  }
+const workflows = ref<Workflow[]>([ 
+  mockWorkflow(),
+  mockWorkflow({ name: "Budget Approval Request" }),
+  mockWorkflow({ name: "Employee Onboarding" })
 ])
 
 
 // Sample users for followers
 const followers = ref<User[] | undefined>([
-  { firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.User },
-  ...sampleAdminUsers
+  mockUser({ firstName: "Jim", lastName: "Halpert", email: "j.halpert@relayos.com", phonenumber: "+234 801 000 0001", role: UserRole.User }),
+  mockUser({ firstName: "Dwight", lastName: "Schrute", email: "d.schrute@relayos.com", phonenumber: "+234 801 000 0002", role: UserRole.User }),
 ])
 
 // Form state

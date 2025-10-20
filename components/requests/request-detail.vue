@@ -125,26 +125,26 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { createSampleRequests, RequestStatus, RequestAction, type Request } from '@/models/request'
+import { RequestStatus, RequestAction, type Request } from '@/models/request'
 import { WorkflowFieldType, WorkflowApprovalStatus, WorkflowActionStatus } from '@/models/workflow'
-import { createSampleUser } from '~/models/user';
+import { mockRequest, mockUser } from '@/models/factories'
 
 const props = defineProps<{
   requestId: string
 }>()
 
 const sample: Request = {
-  ...createSampleRequests(),
+  ...mockRequest(),
   logs: [{
     action: RequestAction.create,
-    user: createSampleUser(),
+    user: mockUser(),
     createdAt: new Date().toISOString()
   }, {
     action: RequestAction.approve,
-    user: createSampleUser(),
+    user: mockUser(),
     createdAt: new Date().toISOString()
   }],
-  observers: [createSampleUser({
+  observers: [mockUser({
     firstName: 'John',
     lastName: 'Doe',
     email: 'john.doe@example.com'

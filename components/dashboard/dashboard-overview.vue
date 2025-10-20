@@ -105,9 +105,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { createSampleWorkflow, type Workflow } from '@/models/workflow'
-import { createSampleUser, type User } from '@/models/user'
-import { createSampleRequests, RequestAction, type Request } from '@/models/request'
+import type { Workflow } from '@/models/workflow'
+import type { User } from '@/models/user'
+import { RequestAction, type Request } from '@/models/request'
+import { mockWorkflow, mockUser, mockRequest } from '@/models/factories'
 import { routes } from '@/routes'
 
 // Extended workflow type with ID
@@ -116,17 +117,17 @@ type WorkflowWithId = Workflow & { id: string }
 // Popular workflows for quick requests
 const popularWorkflows = ref<WorkflowWithId[]>([
   {
-    ...createSampleWorkflow(),
+    ...mockWorkflow(),
     id: '1',
     name: 'Pricing Change Request'
   },
   {
-    ...createSampleWorkflow(),
+    ...mockWorkflow(),
     id: '2',
     name: 'Budget Approval Request'
   },
   {
-    ...createSampleWorkflow(),
+    ...mockWorkflow(),
     id: '3',
     name: 'Employee Onboarding'
   }
@@ -135,21 +136,21 @@ const popularWorkflows = ref<WorkflowWithId[]>([
 // Pending actions - requests awaiting approval
 const pendingActions = ref<Request[]>([
   {
-    ...createSampleRequests('1'),
-    initiator: createSampleUser({ firstName: 'Matthew', lastName: 'Stafford' }),
-    type: { ...createSampleWorkflow(), name: 'Pricing Change Request' },
+    ...mockRequest({ id: '1' }),
+    initiator: mockUser({ firstName: 'Matthew', lastName: 'Stafford' }),
+    type: { ...mockWorkflow(), name: 'Pricing Change Request' },
     createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() // 4 hours ago
   },
   {
-    ...createSampleRequests('2'),
-    initiator: createSampleUser({ firstName: 'Lucas', lastName: 'Brahham' }),
-    type: { ...createSampleWorkflow(), name: 'Budget Approval Request' },
+    ...mockRequest({ id: '2' }),
+    initiator: mockUser({ firstName: 'Lucas', lastName: 'Brahham' }),
+    type: { ...mockWorkflow(), name: 'Budget Approval Request' },
     createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() // 5 hours ago
   },
   {
-    ...createSampleRequests('3'),
-    initiator: createSampleUser({ firstName: 'Diana', lastName: 'Williamson' }),
-    type: { ...createSampleWorkflow(), name: 'Employee Onboarding' },
+    ...mockRequest({ id: '3' }),
+    initiator: mockUser({ firstName: 'Diana', lastName: 'Williamson' }),
+    type: { ...mockWorkflow(), name: 'Employee Onboarding' },
     createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString() // 7 hours ago
   }
 ])
@@ -167,41 +168,41 @@ const recentActivity = ref<ActivityLog[]>([
   {
     id: '1',
     request: {
-      ...createSampleRequests('1'),
-      type: { ...createSampleWorkflow(), name: 'Pricing Change Request' }
+      ...mockRequest({ id: '1' }),
+      type: { ...mockWorkflow(), name: 'Pricing Change Request' }
     },
     action: RequestAction.approve,
-    user: createSampleUser({ firstName: 'Bailey', lastName: 'Kirk' }),
+    user: mockUser({ firstName: 'Bailey', lastName: 'Kirk' }),
     createdAt: new Date(Date.now() - 49 * 60 * 1000).toISOString() // 49 minutes ago
   },
   {
     id: '2',
     request: {
-      ...createSampleRequests('2'),
-      type: { ...createSampleWorkflow(), name: 'Budget Approval Request' }
+      ...mockRequest({ id: '2' }),
+      type: { ...mockWorkflow(), name: 'Budget Approval Request' }
     },
     action: RequestAction.create,
-    user: createSampleUser({ firstName: 'Julian', lastName: 'Henson' }),
+    user: mockUser({ firstName: 'Julian', lastName: 'Henson' }),
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
   },
   {
     id: '3',
     request: {
-      ...createSampleRequests('3'),
-      type: { ...createSampleWorkflow(), name: 'Employee Onboarding' }
+      ...mockRequest({ id: '3' }),
+      type: { ...mockWorkflow(), name: 'Employee Onboarding' }
     },
     action: RequestAction.update,
-    user: createSampleUser({ firstName: 'Jessica', lastName: 'Giles' }),
+    user: mockUser({ firstName: 'Jessica', lastName: 'Giles' }),
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
   },
   {
     id: '4',
     request: {
-      ...createSampleRequests('4'),
-      type: { ...createSampleWorkflow(), name: 'Pricing Change Request' }
+      ...mockRequest({ id: '4' }),
+      type: { ...mockWorkflow(), name: 'Pricing Change Request' }
     },
     action: RequestAction.create,
-    user: createSampleUser({ firstName: 'Matthew', lastName: 'Stafford' }),
+    user: mockUser({ firstName: 'Matthew', lastName: 'Stafford' }),
     createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() // 4 hours ago
   }
 ])

@@ -182,14 +182,16 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { WorkflowFieldType, WorkflowApprovalStatus, WorkflowActionStatus, type WorkflowField } from '@/models/workflow'
-import { sampleAdminUsers, UserRole, type User } from '@/models/user'
+import { UserRole, type User } from '@/models/user'
+import { mockUser } from '@/models/factories'
 
 const loading = ref(false)
 
 // Available users for approvers and action taker
 const availableUsers = ref<User[]>([
-  { firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.User },
-  ...sampleAdminUsers
+  mockUser({ firstName: "Jim", lastName: "Halpert", email: "j.halpert@relayos.com", phonenumber: "+234 801 000 0001", role: UserRole.User }),
+  mockUser({ firstName: "Dwight", lastName: "Schrute", email: "d.schrute@relayos.com", phonenumber: "+234 801 000 0002", role: UserRole.User }),
+  mockUser({ firstName: "Jan", lastName: "Levin", email: "j.levin@relayos.com", phonenumber: "+234 801 000 0003", role: UserRole.User }),
 ])
 
 // Field type options

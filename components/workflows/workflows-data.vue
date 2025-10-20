@@ -10,7 +10,8 @@
 
 <script setup lang="ts">
 import type { TableColumn, TableRow } from '@nuxt/ui'
-import { createSampleWorkflow, type Workflow } from '@/models/workflow';
+import type { Workflow } from '@/models/workflow'
+import { mockWorkflow } from '@/models/factories'
 import { h, ref, computed } from 'vue'
 import { routes } from '@/routes'
 
@@ -23,7 +24,7 @@ const workflows = ref<WorkflowWithId[]>([])
 
 for (let index = 0; index < 2; index++) {
   workflows.value.push({
-    ...createSampleWorkflow(),
+    ...mockWorkflow(),
     id: (index + 1).toString()
   })
 }

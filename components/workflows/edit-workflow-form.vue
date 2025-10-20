@@ -191,8 +191,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { WorkflowFieldType, WorkflowApprovalStatus, WorkflowActionStatus, createSampleWorkflow, type Workflow } from '@/models/workflow'
-import { sampleAdminUsers, UserRole, type User } from '@/models/user'
+import { WorkflowFieldType, WorkflowApprovalStatus, WorkflowActionStatus, type Workflow } from '@/models/workflow'
+import { UserRole, type User } from '@/models/user'
+import { mockWorkflow } from '@/models/factories'
 
 const props = defineProps<{
   workflowId: string
@@ -203,7 +204,8 @@ const loading = ref(false)
 // Available users for approvers and action taker
 const availableUsers = ref<User[]>([
   { firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.User },
-  ...sampleAdminUsers
+  { firstName: "Agbani", lastName: "Darego", email: "a.darego@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.Admin },
+  { firstName: "Ireti", lastName: "Doyle", email: "i.doyle@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.Admin },
 ])
 
 // Field type options
@@ -233,7 +235,7 @@ onMounted(() => {
 
 function loadWorkflow() {
   // TODO: Load workflow from API using props.workflowId
-  const workflow = createSampleWorkflow()
+  const workflow = mockWorkflow()
   
   state.name = workflow.name
   state.fields = workflow.fields.map(f => ({ ...f }))

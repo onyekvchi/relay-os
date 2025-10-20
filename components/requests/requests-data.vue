@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import type { TableColumn, TableRow } from '@nuxt/ui'
-import { createSampleRequests } from '@/models/request';
+import { mockRequest } from '@/models/factories'
 import type { Request } from '@/models/request';
 import { h, ref } from 'vue'
 import { routes } from '@/routes'
@@ -19,7 +19,7 @@ const UBadge = resolveComponent('UBadge')
 const requests = ref<Request[]>([])
 
 for (let index = 0; index < 10; index++) {
-  requests.value.push(createSampleRequests((index + 1).toString()))
+  requests.value.push(mockRequest({ id: (index + 1).toString() }))
 }
 
 const columns: TableColumn<Request>[] = [
