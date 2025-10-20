@@ -4,28 +4,21 @@
 <!-- Table Filtering state -->
 <template>
   <div class=" border border-muted">
-    <UTable :data="requests" :columns="columns" @select="handleRowClick" class="cursor-pointer" />
+    <UTable :data="requests || []" :columns="columns" @select="handleRowClick" class="cursor-pointer" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { TableColumn, TableRow } from '@nuxt/ui'
 import type { Request } from '@/models/request'
-import { RequestMapper } from '@/models/request/request.mapper'
 import { h } from 'vue'
 import { routes } from '@/routes'
 
 const UBadge = resolveComponent('UBadge')
 const { getRequests } = useRequestsApi()
 
-// Fetch requests from API
-const { data: requestsResponse, pending, error } = await getRequests()
-
-// Map DTO to domain model using mapper
-const requests = computed(() => {
-  if (!requestsResponse.value?.data) return []
-  return RequestMapper.toDomainList(requestsResponse.value.data)
-})
+// Fetch requests from API (already mapped to domain models)
+const { data: requests, pending, error } = await getRequests()
 
 const columns: TableColumn<Request>[] = [
   {

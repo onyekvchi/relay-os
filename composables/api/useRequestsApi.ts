@@ -1,3 +1,4 @@
+import type { Request } from '@/models/request/request.model'
 import type { 
   RequestDTO, 
   CreateRequestRequest, 
@@ -5,6 +6,7 @@ import type {
   RejectRequestRequest, 
   RequestChangesRequest 
 } from '@/models/request/request.dto'
+import { RequestMapper } from '@/models/request/request.mapper'
 import type { ApiResponse } from '@/types/api'
 import { HttpMethod } from '@/types/api'
 
@@ -20,9 +22,13 @@ export function useRequestsApi() {
    * @param filters - Optional filters (status, workflow_id)
    */
   const getRequests = (filters?: { status?: string; workflow_id?: string }) => {
-    return useApi<ApiResponse<RequestDTO[]>>('/requests', {
+    return useApi<Request[]>('/requests', {
       query: filters,
       method: HttpMethod.GET,
+      transform: (response: ApiResponse<RequestDTO[]>) => {
+        if (!response?.data) return []
+        return RequestMapper.toDomainList(response.data)
+      },
     })
   }
 
@@ -31,8 +37,12 @@ export function useRequestsApi() {
    * @param id - Request ID
    */
   const getRequest = (id: string) => {
-    return useApi<ApiResponse<RequestDTO>>(`/requests/${id}`, {
+    return useApi<Request | null>(`/requests/${id}`, {
       method: HttpMethod.GET,
+      transform: (response: ApiResponse<RequestDTO>) => {
+        if (!response?.data) return null
+        return RequestMapper.toDomain(response.data)
+      },
     })
   }
 
@@ -40,11 +50,11 @@ export function useRequestsApi() {
    * Create a new request
    * @param data - Request creation data
    */
-  const createRequest = (data: CreateRequestRequest) => {
+  const createRequest = async (data: CreateRequestRequest) => {
     return $api<ApiResponse<RequestDTO>>('/requests', {
       method: HttpMethod.POST,
       body: data,
-    })
+    }).then(response => RequestMapper.toDomain(response.data!))
   }
 
   /**
@@ -52,11 +62,11 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param data - Approval data (approval_id, optional comment)
    */
-  const approveRequest = (id: string, data: ApproveRequestRequest) => {
+  const approveRequest = async (id: string, data: ApproveRequestRequest) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/approve`, {
       method: HttpMethod.POST,
       body: data,
-    })
+    }).then(response => RequestMapper.toDomain(response.data!))
   }
 
   /**
@@ -64,11 +74,11 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param data - Rejection data (approval_id, reason)
    */
-  const rejectRequest = (id: string, data: RejectRequestRequest) => {
+  const rejectRequest = async (id: string, data: RejectRequestRequest) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/reject`, {
       method: HttpMethod.POST,
       body: data,
-    })
+    }).then(response => RequestMapper.toDomain(response.data!))
   }
 
   /**
@@ -76,11 +86,11 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param data - Request changes data (reason)
    */
-  const requestChanges = (id: string, data: RequestChangesRequest) => {
+  const requestChanges = async (id: string, data: RequestChangesRequest) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/request-changes`, {
       method: HttpMethod.POST,
       body: data,
-    })
+    }).then(response => RequestMapper.toDomain(response.data!))
   }
 
   /**
@@ -88,11 +98,11 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param comment - Optional completion comment
    */
-  const completeRequest = (id: string, comment?: string) => {
+  const completeRequest = async (id: string, comment?: string) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/complete`, {
       method: HttpMethod.POST,
       body: { comment },
-    })
+    }).then(response => RequestMapper.toDomain(response.data!))
   }
 
   /**
@@ -100,11 +110,11 @@ export function useRequestsApi() {
    * @param id - Request ID
    * @param comment - Comment text
    */
-  const addComment = (id: string, comment: string) => {
+  const addComment = async (id: string, comment: string) => {
     return $api<ApiResponse<RequestDTO>>(`/requests/${id}/comment`, {
       method: HttpMethod.POST,
       body: { comment },
-    })
+    }).then(response => RequestMapper.toDomain(response.data!))
   }
 
   return {

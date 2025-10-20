@@ -1,4 +1,6 @@
+import type { Workflow } from '@/models/workflow/workflow.model'
 import type { WorkflowDTO, CreateWorkflowRequest, UpdateWorkflowRequest } from '@/models/workflow/workflow.dto'
+import { WorkflowMapper } from '@/models/workflow/workflow.mapper'
 import type { ApiResponse } from '@/types/api'
 import { HttpMethod } from '@/types/api'
 
@@ -14,9 +16,13 @@ export function useWorkflowsApi() {
    * @param includeArchived - Whether to include archived workflows
    */
   const getWorkflows = (includeArchived = false) => {
-    return useApi<ApiResponse<WorkflowDTO[]>>('/workflows', {
+    return useApi<Workflow[]>('/workflows', {
       query: { includeArchived },
       method: HttpMethod.GET,
+      transform: (response: ApiResponse<WorkflowDTO[]>) => {
+        if (!response?.data) return []
+        return WorkflowMapper.toDomainList(response.data)
+      },
     })
   }
 
@@ -25,8 +31,12 @@ export function useWorkflowsApi() {
    * @param id - Workflow ID
    */
   const getWorkflow = (id: string) => {
-    return useApi<ApiResponse<WorkflowDTO>>(`/workflows/${id}`, {
+    return useApi<Workflow | null>(`/workflows/${id}`, {
       method: HttpMethod.GET,
+      transform: (response: ApiResponse<WorkflowDTO>) => {
+        if (!response?.data) return null
+        return WorkflowMapper.toDomain(response.data)
+      },
     })
   }
 
@@ -34,11 +44,11 @@ export function useWorkflowsApi() {
    * Create a new workflow
    * @param data - Workflow creation data
    */
-  const createWorkflow = (data: CreateWorkflowRequest) => {
+  const createWorkflow = async (data: CreateWorkflowRequest) => {
     return $api<ApiResponse<WorkflowDTO>>('/workflows', {
       method: HttpMethod.POST,
       body: data,
-    })
+    }).then(response => WorkflowMapper.toDomain(response.data!))
   }
 
   /**
@@ -46,18 +56,18 @@ export function useWorkflowsApi() {
    * @param id - Workflow ID
    * @param data - Workflow update data
    */
-  const updateWorkflow = (id: string, data: UpdateWorkflowRequest) => {
+  const updateWorkflow = async (id: string, data: UpdateWorkflowRequest) => {
     return $api<ApiResponse<WorkflowDTO>>(`/workflows/${id}`, {
       method: HttpMethod.PUT,
       body: data,
-    })
+    }).then(response => WorkflowMapper.toDomain(response.data!))
   }
 
   /**
    * Archive a workflow (soft delete)
    * @param id - Workflow ID
    */
-  const archiveWorkflow = (id: string) => {
+  const archiveWorkflow = async (id: string) => {
     return $api<ApiResponse>(`/workflows/${id}`, {
       method: HttpMethod.DELETE,
     })
