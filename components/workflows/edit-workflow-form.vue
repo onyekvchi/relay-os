@@ -190,23 +190,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { WorkflowFieldType, WorkflowApprovalStatus } from '@/models/workflow'
-import { UserRole, type User } from '@/models/user'
-import { mockWorkflow, mockUser } from '@/models/factories'
+import { ref, reactive, watch } from 'vue'
+import { WorkflowFieldType } from '@/models/workflow'
+import type { User } from '@/models/user'
+import { routes } from '@/routes'
 
 const props = defineProps<{
   workflowId: string
 }>()
 
 const loading = ref(false)
+const { getWorkflow, updateWorkflow } = useWorkflowsApi()
+const { getUsers } = useUsersApi()
 
-// Available users for approvers and action taker
-const availableUsers = ref<User[]>([
-  mockUser({ firstName: "Bolaji", lastName: "Akande", email: "b.akande@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.User }),
-  mockUser({ firstName: "Agbani", lastName: "Darego", email: "a.darego@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.Admin }),
-  mockUser({ firstName: "Ireti", lastName: "Doyle", email: "i.doyle@relayos.com", phonenumber: "+234 809 623 7816", role: UserRole.Admin }),
-])
+// Fetch available users for approvers and action taker
+const { data: availableUsers, pending: usersLoading } = await getUsers()
+
+// Fetch existing workflow data
+const { data: existingWorkflow, pending: workflowLoading } = await getWorkflow(props.workflowId)
 
 // Field type options
 const fieldTypes = [
@@ -228,27 +229,27 @@ const state = reactive({
   actionTaker: undefined as User | undefined
 })
 
-// Load existing workflow data
-onMounted(() => {
-  loadWorkflow()
-})
-
-function loadWorkflow() {
-  // TODO: Load workflow from API using props.workflowId
-  const workflow = mockWorkflow()
-  
-  state.name = workflow.name
-  state.fields = workflow.fields.map(f => ({ ...f }))
-  // Group approvals by order to create steps
-  const approvalsByOrder = workflow.approvals.reduce((acc, approval) => {
-    if (!acc[approval.order]) acc[approval.order] = []
-    acc[approval.order].push(approval.approver)
-    return acc
-  }, {} as Record<number, typeof workflow.approvals[0]['approver'][]>)
-  
-  state.steps = Object.values(approvalsByOrder).map(approvers => ({ approvers }))
-  state.actionTaker = workflow.action.actor
-}
+// Load existing workflow data into form state
+watch(existingWorkflow, (workflow) => {
+  if (workflow) {
+    state.name = workflow.name
+    state.fields = workflow.fields.map(f => ({
+      label: f.label,
+      type: f.type,
+      description: f.description
+    }))
+    
+    // Group approvals by order to create steps
+    const approvalsByOrder = workflow.approvals.reduce((acc, approval) => {
+      if (!acc[approval.order]) acc[approval.order] = []
+      acc[approval.order].push(approval.approver)
+      return acc
+    }, {} as Record<number, User[]>)
+    
+    state.steps = Object.values(approvalsByOrder).map(approvers => ({ approvers }))
+    state.actionTaker = workflow.action.actor
+  }
+}, { immediate: true })
 
 function addField() {
   state.fields.push({
@@ -273,37 +274,42 @@ function removeApprovalStep(index: number) {
 }
 
 function handleCancel() {
-  navigateTo(`/workflows/${props.workflowId}`)
+  navigateTo(routes.workflow(props.workflowId))
 }
 
 async function onSubmit() {
+  if (!state.actionTaker) return
+
   loading.value = true
 
   try {
-    // TODO: Implement API call to update workflow
-    console.log('Updating workflow:', {
-      id: props.workflowId,
-      name: state.name,
-      fields: state.fields,
-      steps: state.steps.map(step => ({
-        status: WorkflowApprovalStatus.pending,
-        approvals: step.approvers.map(approver => ({
-          approver,
-          status: WorkflowApprovalStatus.pending
-        }))
-      })),
-      action: {
-        actor: state.actionTaker
-      }
+    // Flatten approval steps into a single array of approver IDs
+    const approvalIds: string[] = []
+    state.steps.forEach(step => {
+      step.approvers.forEach(approver => {
+        approvalIds.push(approver.id)
+      })
     })
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Update workflow via API
+    await updateWorkflow(props.workflowId, {
+      name: state.name,
+      fields: state.fields.map((field, index) => ({
+        label: field.label,
+        type: String(field.type),
+        description: field.description,
+        required: true,
+        order: index
+      })),
+      approval_ids: approvalIds,
+      action_actor_id: state.actionTaker.id
+    })
 
     // Navigate back to workflow detail
-    await navigateTo(`/workflows/${props.workflowId}`)
+    await navigateTo(routes.workflow(props.workflowId))
   } catch (error) {
     console.error('Error updating workflow:', error)
+    // TODO: Show error toast
   } finally {
     loading.value = false
   }

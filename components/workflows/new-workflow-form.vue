@@ -183,6 +183,7 @@
 import { ref, reactive } from 'vue'
 import { WorkflowFieldType } from '@/models/workflow'
 import type { User } from '@/models/user'
+import { routes } from '@/routes'
 
 const loading = ref(false)
 const { getUsers } = useUsersApi()
@@ -262,7 +263,7 @@ async function onSubmit() {
     })
 
     // Navigate back to workflows list
-    await navigateTo('/workflows')
+    await navigateTo(routes.workflows)
   } catch (error) {
     console.error('Error creating workflow:', error)
     // TODO: Show error toast
