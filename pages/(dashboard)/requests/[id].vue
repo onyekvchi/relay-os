@@ -6,8 +6,7 @@
         <UButton 
           color="primary" 
           size="lg"
-          :loading="approving"
-          @click="handleApprove"
+          @click="showApproveModal = true"
         >
           Approve
         </UButton>
@@ -15,8 +14,7 @@
           color="neutral" 
           variant="outline" 
           size="lg"
-          :loading="requestingChanges"
-          @click="handleRequestChanges"
+          @click="showRequestChangesModal = true"
         >
           Request changes
         </UButton>
@@ -24,8 +22,7 @@
           color="error" 
           variant="outline" 
           size="lg"
-          :loading="rejecting"
-          @click="handleReject"
+          @click="showRejectModal = true"
         >
           Reject
         </UButton>
@@ -33,6 +30,46 @@
     </div>
 
     <RequestsRequestDetail :request-id="requestId" />
+
+    <!-- Approve Modal -->
+    <AppConfirmationModal
+      v-model:open="showApproveModal"
+      title="Approve Request"
+      description="Are you sure you want to approve this request?"
+      confirm-label="Approve"
+      confirm-color="primary"
+      :require-comment="true"
+      :loading="approving"
+      @confirm="handleApprove"
+    />
+
+    <!-- Request Changes Modal -->
+    <AppConfirmationModal
+      v-model:open="showRequestChangesModal"
+      title="Request Changes"
+      description="Please provide a reason for requesting changes."
+      confirm-label="Request Changes"
+      confirm-color="warning"
+      :require-comment="true"
+      :comment-required="true"
+      comment-placeholder="Explain what needs to be changed..."
+      :loading="requestingChanges"
+      @confirm="handleRequestChanges"
+    />
+
+    <!-- Reject Modal -->
+    <AppConfirmationModal
+      v-model:open="showRejectModal"
+      title="Reject Request"
+      description="Are you sure you want to reject this request?"
+      confirm-label="Reject"
+      confirm-color="error"
+      :require-comment="true"
+      :comment-required="true"
+      comment-placeholder="Provide a reason for rejection..."
+      :loading="rejecting"
+      @confirm="handleReject"
+    />
   </div>
 </template>
 
@@ -54,12 +91,20 @@ const approving = ref(false)
 const rejecting = ref(false)
 const requestingChanges = ref(false)
 
-async function handleApprove() {
+const showApproveModal = ref(false)
+const showRejectModal = ref(false)
+const showRequestChangesModal = ref(false)
+
+async function handleApprove(comment?: string) {
   approving.value = true
   try {
     // TODO: Get approval_id from current user's approval
-    await approveRequest(requestId, { approval_id: 'approval-id' })
-    // TODO: Refresh page or show success toast
+    await approveRequest(requestId, { 
+      approval_id: 'approval-id',
+      comment: comment
+    })
+    showApproveModal.value = false
+    // TODO: Show success toast
     await navigateTo(routes.requests)
   } catch (error) {
     console.error('Error approving request:', error)
@@ -69,12 +114,18 @@ async function handleApprove() {
   }
 }
 
-async function handleRequestChanges() {
+async function handleRequestChanges(comment?: string) {
+  if (!comment) return
+  
   requestingChanges.value = true
   try {
-    // TODO: Get approval_id from current user's approval and prompt for reason
-    await requestChanges(requestId, { approval_id: 'approval-id', reason: 'Changes needed' })
-    // TODO: Refresh page or show success toast
+    // TODO: Get approval_id from current user's approval
+    await requestChanges(requestId, { 
+      approval_id: 'approval-id', 
+      reason: comment 
+    })
+    showRequestChangesModal.value = false
+    // TODO: Show success toast
     await navigateTo(routes.requests)
   } catch (error) {
     console.error('Error requesting changes:', error)
@@ -84,12 +135,18 @@ async function handleRequestChanges() {
   }
 }
 
-async function handleReject() {
+async function handleReject(comment?: string) {
+  if (!comment) return
+  
   rejecting.value = true
   try {
-    // TODO: Get approval_id from current user's approval and prompt for reason
-    await rejectRequest(requestId, { approval_id: 'approval-id', reason: 'Rejected' })
-    // TODO: Refresh page or show success toast
+    // TODO: Get approval_id from current user's approval
+    await rejectRequest(requestId, { 
+      approval_id: 'approval-id', 
+      reason: comment 
+    })
+    showRejectModal.value = false
+    // TODO: Show success toast
     await navigateTo(routes.requests)
   } catch (error) {
     console.error('Error rejecting request:', error)
