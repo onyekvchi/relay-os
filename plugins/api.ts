@@ -8,7 +8,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     baseURL: config.public.apiBase,
 
     onRequest({ options }) {
-      const { token } = useAuthStore()
+      const authStore = useAuthStore()
+      const token = authStore.getToken
       
       options.headers = new Headers(options.headers)
       options.headers.set('Accept', 'application/json')
