@@ -33,13 +33,14 @@ export type UpdatePasswordRequest = {
 }
 
 export type UserData = {
-  id: number
-  name: string
+  id: string
+  first_name: string
+  last_name: string
   email: string
-  email_verified_at: string | null
+  phone_number: string
+  role: string
   created_at: string
   updated_at: string
-  unread_emails_count: number
 }
 
 export type LoginData = {

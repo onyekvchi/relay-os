@@ -1,14 +1,17 @@
 import { http, HttpResponse } from 'msw'
 import { db } from './db'
-import type { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '~/types/auth'
 import { workflowHandlers } from './handlers/workflow.handlers'
 import { requestHandlers } from './handlers/request.handlers'
 import { userHandlers } from './handlers/user.handlers'
 import { dashboardHandlers } from './handlers/dashboard.handlers'
+import { authHandlers } from './handlers/auth.handlers'
 
 const API_BASE = 'http://localhost:8000/api/v1'
 
 export const handlers = [
+  // Auth handlers (must be first to handle authentication)
+  ...authHandlers,
+
   // Dashboard handlers
   ...dashboardHandlers,
 
@@ -21,110 +24,7 @@ export const handlers = [
   // User handlers
   ...userHandlers,
 
-  // Auth handlers
-  // Login
-  http.post(`${API_BASE}/login`, async ({ request }) => {
-    const body = await request.json() as LoginRequest & { device_name?: string }
-
-    const user = db.user.findFirst({
-      where: {
-        email: {
-          equals: body.email,
-        },
-      },
-    })
-
-    if (!user) {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Invalid credentials',
-          errors: ['Email or password is incorrect'],
-        },
-        { status: 401 }
-      )
-    }
-
-    // Generate token
-    const tokenValue = `token-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
-    const token = db.token.create({
-      id: `token-${Date.now()}`,
-      userId: user.id,
-      token: tokenValue,
-      expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date().toISOString(),
-    })
-
-    return HttpResponse.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user,
-        token: token.token,
-      },
-    })
-  }),
-
-  // Register
-  http.post(`${API_BASE}/register`, async ({ request }) => {
-    const body = await request.json() as RegisterRequest & { device_name?: string }
-
-    // Check if user already exists
-    const existingUser = db.user.findFirst({
-      where: {
-        email: {
-          equals: body.email,
-        },
-      },
-    })
-
-    if (existingUser) {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'User already exists',
-          errors: ['Email is already registered'],
-        },
-        { status: 422 }
-      )
-    }
-
-    // Create new user
-    const firstName = body.first_name || 'User'
-    const lastName = body.last_name || 'Account'
-    
-    const user = db.user.create({
-      id: `user-${Date.now()}`,
-      first_name: firstName,
-      last_name: lastName,
-      email: body.email,
-      phone_number: '+234 800 000 0000', // Default phone
-      role: 'User', // Default role
-      email_verified_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-
-    // Generate token
-    const tokenValue = `token-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
-    const token = db.token.create({
-      id: `token-${Date.now()}`,
-      userId: user.id,
-      token: tokenValue,
-      expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date().toISOString(),
-    })
-
-    return HttpResponse.json({
-      success: true,
-      message: 'Registration successful',
-      data: {
-        user,
-        token: token.token,
-      },
-    })
-  }),
-
+  // Additional auth endpoints (email verification, etc.)
   // Verify Email
   http.get(`${API_BASE}/verify-email`, async ({ request }) => {
     const url = new URL(request.url)
@@ -227,53 +127,6 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       message: 'Verification email sent',
-    })
-  }),
-
-  // Forgot Password
-  http.post(`${API_BASE}/forgot-password`, async ({ request }) => {
-    const body = await request.json() as ForgotPasswordRequest
-
-    const user = db.user.findFirst({
-      where: {
-        email: {
-          equals: body.email,
-        },
-      },
-    })
-
-    if (!user) {
-      // Don't reveal if user exists or not
-      return HttpResponse.json({
-        success: true,
-        message: 'If the email exists, a password reset link has been sent',
-      })
-    }
-
-    return HttpResponse.json({
-      success: true,
-      message: 'Password reset link sent to your email',
-    })
-  }),
-
-  // Reset Password
-  http.post(`${API_BASE}/reset-password`, async ({ request }) => {
-    const body = await request.json() as ResetPasswordRequest & { token?: string }
-
-    if (!body.token) {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Invalid reset token',
-        },
-        { status: 400 }
-      )
-    }
-
-    // For mock purposes, just return success
-    return HttpResponse.json({
-      success: true,
-      message: 'Password reset successful',
     })
   }),
 ]

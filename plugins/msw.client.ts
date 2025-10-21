@@ -6,9 +6,13 @@ export default defineNuxtPlugin(async () => {
   if (enableMSW) {
     const { worker } = await import('~/mocks/browser')
     const { seedDatabase } = await import('~/mocks/db')
+    const { seedDemoData } = await import('~/mocks/factories')
 
-    // Seed the database
+    // Seed the database with initial data
     seedDatabase()
+    
+    // Seed demo user for easy login
+    seedDemoData()
 
     // Start the worker
     await worker.start({

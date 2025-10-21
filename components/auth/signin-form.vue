@@ -50,6 +50,7 @@ const state = reactive<Partial<LoginFormFields>>({
 async function onSubmit(event: FormSubmitEvent<LoginFormFields>) {
   const { login } = useAuthApi()
   const { setAuth } = useAuthStore()
+  const { UserMapper } = await import('@/models/user')
 
   loading.value = true
   error.value = ''
@@ -61,7 +62,9 @@ async function onSubmit(event: FormSubmitEvent<LoginFormFields>) {
     }
     const response = await login(loginData)
     if (response.data) {
-      const { user, token } = response.data
+      const { user: userDTO, token } = response.data
+      // Transform DTO to domain model
+      const user = UserMapper.toModel(userDTO)
       setAuth({ user, token })
     }
     await navigateTo(routes.dashboard)

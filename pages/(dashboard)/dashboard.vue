@@ -7,10 +7,9 @@ definePageMeta({
 const authStore = useAuthStore()
 const user = computed(() => authStore.getUser)
 
-// Extract first name from full name
+// Extract first name
 const firstName = computed(() => {
-  if (!user.value?.name) return 'User'
-  return user.value.name.split(' ')[0]
+  return user.value?.firstName || 'User'
 })
 
 const welcomeMessage = computed(() => `Welcome, ${firstName.value}`)

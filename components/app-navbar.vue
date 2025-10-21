@@ -38,11 +38,16 @@ const handleLogout = async () => {
 };
 
 const userFirstName = computed(() => {
-  return getUser?.name
+  return getUser?.firstName || 'User'
 })
 
 const userInitials = computed(() => {
-  return userFirstName.value?.substring(0, 1)
+  const firstName = getUser?.firstName || ''
+  const lastName = getUser?.lastName || ''
+  if (firstName && lastName) {
+    return firstName[0] + lastName[0]
+  }
+  return firstName[0] || 'U'
 })
 
 const navigationItems = computed(() => {

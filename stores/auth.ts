@@ -1,7 +1,7 @@
-import { type UserData } from "~/types/auth";
+import type { User } from "~/models/user";
 
 export const useAuthStore = defineStore('authStore', () => {
-  const user = ref<UserData | null>(null);
+  const user = ref<User | null>(null);
   const token = ref<string | null>(null);
   const expiry = ref<number | null>(null);
   
@@ -15,7 +15,7 @@ export const useAuthStore = defineStore('authStore', () => {
   const getToken = computed(() => token.value);
   const getUserId = computed(() => user.value?.id);
   
-  function setUser(newUser: UserData) {
+  function setUser(newUser: User) {
     user.value = newUser;
   }
   
@@ -23,10 +23,10 @@ export const useAuthStore = defineStore('authStore', () => {
     token.value = newToken;
   }
   
-  function setAuth({ user: newUser, token: newToken }: { user: UserData; token: string }) {
+  function setAuth({ user: newUser, token: newToken }: { user: User; token: string }) {
     user.value = newUser;
     token.value = newToken;
-    expiry.value = Date.now() + 2 * 24 * 60 * 60 * 1000; // 2 days
+    expiry.value = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days (match token expiry)
   }
   
   function clearAuth() {

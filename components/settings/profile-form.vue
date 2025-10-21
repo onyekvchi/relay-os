@@ -51,17 +51,17 @@
 const authStore = useAuthStore()
 const user = computed(() => authStore.getUser)
 
-const fullName = ref(user.value?.name || '')
+const fullName = ref(`${user.value?.firstName || ''} ${user.value?.lastName || ''}`.trim())
 const profilePicture = ref<string | undefined>(undefined)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 const userInitials = computed(() => {
-  if (!user.value?.name) return 'U'
-  const names = user.value.name.split(' ')
-  if (names.length >= 2) {
-    return names[0][0] + names[1][0]
+  const firstName = user.value?.firstName || ''
+  const lastName = user.value?.lastName || ''
+  if (firstName && lastName) {
+    return firstName[0] + lastName[0]
   }
-  return names[0][0]
+  return firstName[0] || 'U'
 })
 
 function triggerFileInput() {

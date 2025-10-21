@@ -194,3 +194,30 @@ export function createMockRequest(overrides?: Partial<{
 
   return request
 }
+
+/**
+ * Seed the database with initial demo data
+ * Creates a demo user that can always be used for login
+ */
+export function seedDemoData() {
+  // Check if demo user already exists
+  const existingDemo = db.user.findFirst({
+    where: { email: { equals: 'demo@relayos.com' } }
+  })
+
+  if (existingDemo) {
+    return // Demo user already exists
+  }
+
+  // Create demo user (Admin role for full access)
+  createMockUser({
+    id: 'demo-user',
+    first_name: 'Demo',
+    last_name: 'User',
+    email: 'demo@relayos.com',
+    phone_number: '+234 800 123 4567',
+    role: 'Admin'
+  })
+
+  console.log('✅ Demo user created: demo@relayos.com (password: any)')
+}
