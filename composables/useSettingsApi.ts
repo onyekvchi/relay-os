@@ -64,6 +64,25 @@ export const useSettingsApi = () => {
     })
   }
 
+  /**
+   * Get workspace settings
+   */
+  const getWorkspace = async () => {
+    return useApi<ApiResponse<{ name: string; logo?: string }>>('/settings/workspace', {
+      method: 'GET',
+    })
+  }
+
+  /**
+   * Update workspace settings
+   */
+  const updateWorkspace = async (data: { name: string; logo?: string }) => {
+    return useApi<ApiResponse<{ name: string; logo?: string }>>('/settings/workspace', {
+      method: 'PATCH',
+      body: data,
+    })
+  }
+
   return {
     getProfile,
     updateProfile,
@@ -71,5 +90,7 @@ export const useSettingsApi = () => {
     getTeamMembers,
     addTeamMember,
     removeTeamMember,
+    getWorkspace,
+    updateWorkspace,
   }
 }

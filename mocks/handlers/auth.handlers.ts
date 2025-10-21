@@ -10,6 +10,7 @@ const API_BASE = 'http://localhost:8000/api/v1'
  */
 export function getCurrentUser(request: Request) {
   const authHeader = request.headers.get('Authorization')
+  
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null
   }

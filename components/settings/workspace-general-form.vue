@@ -1,5 +1,23 @@
 <template>
   <div class="max-w-lg space-y-8">
+    <!-- Success/Error Messages -->
+    <UAlert
+      v-if="successMessage"
+      color="success"
+      variant="soft"
+      :title="successMessage"
+      :close-button="{ icon: 'i-heroicons-x-mark-20-solid', color: 'gray', variant: 'link' }"
+      @close="successMessage = null"
+    />
+    <UAlert
+      v-if="errorMessage"
+      color="error"
+      variant="soft"
+      :title="errorMessage"
+      :close-button="{ icon: 'i-heroicons-x-mark-20-solid', color: 'gray', variant: 'link' }"
+      @close="errorMessage = null"
+    />
+
     <!-- Workspace Section -->
     <div class="space-y-4">
       <div>
@@ -45,19 +63,17 @@
             placeholder="Workspace name"
           />
         </div>
+      </div>
 
-        <!-- URL -->
-        <div class="flex items-center justify-between py-4 border-b border-muted">
-          <label class="text-sm font-semibold">URL</label>
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-muted">relayos.app/</span>
-            <UInput 
-              v-model="workspaceUrl" 
-              class="w-32"
-              placeholder="workspace-url"
-            />
-          </div>
-        </div>
+      <!-- Save Button -->
+      <div class="flex justify-end pt-2">
+        <UButton
+          :loading="isSaving"
+          :disabled="!hasChanges"
+          @click="handleSave"
+        >
+          Save changes
+        </UButton>
       </div>
     </div>
 
@@ -88,10 +104,19 @@
 </template>
 
 <script setup lang="ts">
-const workspaceName = ref('AndCo Labs')
-const workspaceUrl = ref('and-co')
+const { getWorkspace, updateWorkspace } = useSettingsApi()
+
+// State
+const workspaceName = ref('')
 const workspaceLogo = ref<string | undefined>(undefined)
 const logoInput = ref<HTMLInputElement | null>(null)
+const isSaving = ref(false)
+const successMessage = ref<string | null>(null)
+const errorMessage = ref<string | null>(null)
+
+// Original values for change detection
+const originalName = ref('')
+const originalLogo = ref<string | undefined>(undefined)
 
 const workspaceInitials = computed(() => {
   if (!workspaceName.value) return 'W'
@@ -101,6 +126,66 @@ const workspaceInitials = computed(() => {
   }
   return words[0].substring(0, 2).toUpperCase()
 })
+
+const hasChanges = computed(() => {
+  return (
+    workspaceName.value !== originalName.value ||
+    workspaceLogo.value !== originalLogo.value
+  )
+})
+
+// Fetch workspace data on mount
+onMounted(async () => {
+  await fetchWorkspace()
+})
+
+async function fetchWorkspace() {
+  try {
+    const { data, error } = await getWorkspace()
+    
+    if (error.value) {
+      throw new Error(error.value.message || 'Failed to fetch workspace')
+    }
+
+    if (data.value?.data) {
+      workspaceName.value = data.value.data.name
+      workspaceLogo.value = data.value.data.logo
+      originalName.value = data.value.data.name
+      originalLogo.value = data.value.data.logo
+    }
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Failed to load workspace'
+  }
+}
+
+async function handleSave() {
+  if (!hasChanges.value) return
+
+  isSaving.value = true
+  successMessage.value = null
+  errorMessage.value = null
+
+  try {
+    const { data, error } = await updateWorkspace({
+      name: workspaceName.value,
+      logo: workspaceLogo.value
+    })
+
+    if (error.value) {
+      throw new Error(error.value.message || 'Failed to update workspace')
+    }
+
+    if (data.value?.data) {
+      successMessage.value = 'Workspace updated successfully'
+      originalName.value = workspaceName.value
+      originalLogo.value = workspaceLogo.value
+    }
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Failed to update workspace'
+  } finally {
+    isSaving.value = false
+  }
+}
 
 function triggerLogoInput() {
   logoInput.value?.click()

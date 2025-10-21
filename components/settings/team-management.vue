@@ -204,6 +204,8 @@ onMounted(async () => {
 
 async function fetchTeamMembers() {
   isLoading.value = true
+  errorMessage.value = null
+  
   try {
     const { data, error } = await getTeamMembers()
     

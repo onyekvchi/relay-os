@@ -217,8 +217,8 @@ export const settingsHandlers = [
     })
   }),
 
-  // DELETE /settings/workspace/team/:id - Remove team member (Admin only)
-  http.delete(`${API_BASE}/settings/workspace/team/:id`, ({ request, params }) => {
+  // DELETE /settings/workspace/team/:userId - Remove team member (Admin only)
+  http.delete(`${API_BASE}/settings/workspace/team/:userId`, ({ request, params }) => {
     const user = getCurrentUser(request)
 
     if (!user) {
@@ -231,7 +231,7 @@ export const settingsHandlers = [
       )
     }
 
-    // Only admins can remove team members
+    // Check if user has permission to remove team members
     if (user.role !== 'Admin') {
       return HttpResponse.json(
         {
@@ -242,41 +242,78 @@ export const settingsHandlers = [
       )
     }
 
-    const { id } = params
+    const { userId } = params
 
-    // Cannot delete yourself
-    if (id === user.id) {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Cannot remove yourself from the team',
-        },
-        { status: 400 }
-      )
-    }
-
-    // Delete user
-    const deleted = db.user.delete({
-      where: {
-        id: {
-          equals: id as string,
-        },
-      },
+    // Delete user from database
+    db.user.delete({
+      where: { id: { equals: userId as string } }
     })
-
-    if (!deleted) {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Team member not found',
-        },
-        { status: 404 }
-      )
-    }
 
     return HttpResponse.json({
       success: true,
       message: 'Team member removed successfully'
+    })
+  }),
+
+  // GET /settings/workspace - Get workspace settings
+  http.get(`${API_BASE}/settings/workspace`, ({ request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
+    // Return mock workspace data
+    return HttpResponse.json({
+      success: true,
+      data: {
+        name: 'AndCo Labs',
+        logo: undefined
+      }
+    })
+  }),
+
+  // PATCH /settings/workspace - Update workspace settings
+  http.patch(`${API_BASE}/settings/workspace`, async ({ request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
+    // Check if user has permission to update workspace
+    if (user.role !== 'Admin' && user.role !== 'Workspace Manager') {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions',
+        },
+        { status: 403 }
+      )
+    }
+
+    const body = await request.json() as { name: string; logo?: string }
+
+    // In a real app, would update workspace in database
+    // For now, just return success with the updated data
+    return HttpResponse.json({
+      success: true,
+      data: {
+        name: body.name,
+        logo: body.logo
+      }
     })
   }),
 ]
