@@ -1,0 +1,1979 @@
+openapi: 3.1.0
+info:
+  title: Relay-OS API
+  version: 1.0.0
+  description: |
+    Production-grade workflow approval system API supporting dynamic conditional routing,
+    versioned workflow definitions, and comprehensive audit trails.
+  contact:
+    name: Relay-OS API Support
+    url: https://relayos.app
+
+servers:
+  - url: https://api.relayos.app/v1
+    description: Production server
+  - url: https://staging-api.relayos.app/v1
+    description: Staging server
+  - url: http://localhost:8080/v1
+    description: Local development server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Users
+    description: User profile and task management
+  - name: Workflows
+    description: Workflow template definitions and management
+  - name: Requests
+    description: Workflow instances (requests) and their lifecycle
+
+paths:
+  /users/me/tasks:
+    get:
+      tags:
+        - Users
+      summary: Get my pending tasks
+      description: |
+        Retrieve all tasks (approvals, actions) assigned to the current user across all workspaces.
+        Returns tasks that require the user's action.
+      operationId: getMyTasks
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, in_progress]
+            default: pending
+          description: Filter tasks by status
+        - name: workspace_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Filter by specific workspace
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of tasks assigned to current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserTask'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              examples:
+                myTasks:
+                  value:
+                    tasks:
+                      - id: task_001
+                        request_id: req_001
+                        request_context:
+                          merchant_name: Acme Corp
+                          old_price: 5000
+                          new_price: 4500
+                          department: Finance
+                        workflow:
+                          id: wf_pricing_001
+                          name: Pricing Change Request
+                          version: 2
+                        step_key: finance_approval
+                        step_type: approval
+                        status: pending
+                        assigned_at: '2025-10-20T10:15:00Z'
+                        requester:
+                          id: u_123
+                          name: Jane Doe
+                          email: jane@relayos.com
+                      - id: task_002
+                        request_id: req_002
+                        request_context:
+                          amount: 7500
+                          department: Tech
+                        workflow:
+                          id: wf_expense_001
+                          name: Expense Approval
+                          version: 1
+                        step_key: executive_approval
+                        step_type: approval
+                        status: pending
+                        assigned_at: '2025-10-19T14:30:00Z'
+                        requester:
+                          id: u_456
+                          name: John Smith
+                          email: john@relayos.com
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 2
+                      total_pages: 1
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /workspaces/{workspaceId}/workflows:
+    get:
+      tags:
+        - Workflows
+      summary: List workflows
+      description: Retrieve all workflow definitions within a workspace with optional filtering
+      operationId: listWorkflows
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Workspace identifier
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [draft, published, archived]
+          description: Filter by workflow status
+        - name: version
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [latest, all]
+            default: latest
+          description: Return only latest version or all versions
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of workflows
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workflows:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowDefinition'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              examples:
+                workflowList:
+                  value:
+                    workflows:
+                      - id: wf_pricing_001
+                        name: Pricing Change Request
+                        version: 2
+                        status: published
+                        start_key: department_router
+                        created_by:
+                          id: u_123
+                          name: Jane Doe
+                          email: jane@relayos.com
+                        created_at: '2025-10-15T09:00:00Z'
+                      - id: wf_expense_001
+                        name: Expense Approval
+                        version: 1
+                        status: draft
+                        start_key: check_amount
+                        created_by:
+                          id: u_456
+                          name: John Smith
+                          email: john@relayos.com
+                        created_at: '2025-10-18T14:30:00Z'
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 2
+                      total_pages: 1
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      tags:
+        - Workflows
+      summary: Create workflow
+      description: Create a new workflow definition with fields, steps, and conditional routing
+      operationId: createWorkflow
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - fields
+                - steps
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                start_key:
+                  type: string
+                  description: Key of the starting step (defaults to first step if not provided)
+                fields:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/FieldDefinition'
+                  minItems: 1
+                steps:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StepDefinition'
+                  minItems: 1
+            examples:
+              pricingChangeWorkflow:
+                value:
+                  name: Pricing Change Request
+                  start_key: manager_approval
+                  fields:
+                    - key: merchant_name
+                      label: Merchant name
+                      type: short_text
+                      description: Whose pricing do you want to change?
+                      required: true
+                      position: 0
+                    - key: old_price
+                      label: Old price
+                      type: currency
+                      required: true
+                      position: 1
+                    - key: new_price
+                      label: New price
+                      type: currency
+                      required: true
+                      position: 2
+                    - key: reason
+                      label: Reason for the change
+                      type: long_text
+                      description: How are we justifying this change?
+                      position: 3
+                    - key: department
+                      label: Department
+                      type: select
+                      options: [Tech, Finance, Sales]
+                      required: true
+                      position: 4
+                  steps:
+                    - key: manager_approval
+                      type: approval
+                      assignees:
+                        - manager@company.com
+                      next: cost_check
+                    - key: cost_check
+                      type: gateway:exclusive
+                      branches:
+                        - condition: new_price <= 1000
+                          to: auto_approve
+                        - condition: new_price > 1000 && department == 'Finance'
+                          to: finance_approval
+                        - condition: new_price > 10000
+                          to: executive_approval
+                    - key: finance_approval
+                      type: approval
+                      assignees:
+                        - finance@company.com
+                      next: execute_action
+                    - key: executive_approval
+                      type: approval
+                      assignees:
+                        - ceo@company.com
+                      next: execute_action
+                    - key: auto_approve
+                      type: action
+                      assignee: system
+                    - key: execute_action
+                      type: action
+                      assignee: ops@company.com
+      responses:
+        '201':
+          description: Workflow created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /workflows/{workflowId}:
+    get:
+      tags:
+        - Workflows
+      summary: Get workflow definition
+      description: Retrieve a specific workflow definition by ID
+      operationId: getWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Workflow identifier
+      responses:
+        '200':
+          description: Workflow definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      tags:
+        - Workflows
+      summary: Update workflow
+      description: Update a workflow definition (only allowed for draft status)
+      operationId: updateWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                start_key:
+                  type: string
+                fields:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/FieldDefinition'
+                steps:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StepDefinition'
+      responses:
+        '200':
+          description: Workflow updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Conflict - Cannot update published or archived workflow
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /workflows/{workflowId}/publish:
+    post:
+      tags:
+        - Workflows
+      summary: Publish workflow
+      description: Publish a draft workflow to make it available for creating requests
+      operationId: publishWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Conflict - Workflow is not in draft status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /workflows/{workflowId}/archive:
+    post:
+      tags:
+        - Workflows
+      summary: Archive workflow
+      description: Archive a workflow to prevent new requests from being created
+      operationId: archiveWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow archived successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /workspaces/{workspaceId}/requests:
+    get:
+      tags:
+        - Requests
+      summary: List requests
+      description: Retrieve all workflow instances (requests) within a workspace with filtering
+      operationId: listRequests
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [running, completed, canceled, failed]
+        - name: workflow_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by workflow definition ID
+        - name: created_by
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Filter by creator user ID
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowInstanceSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              examples:
+                requestList:
+                  value:
+                    requests:
+                      - id: req_001
+                        workflow:
+                          id: wf_pricing_001
+                          name: Pricing Change Request
+                          version: 2
+                        status: running
+                        context:
+                          merchant_name: Acme Corp
+                          old_price: 5000
+                          new_price: 4500
+                          department: Finance
+                        active_steps:
+                          - finance_approval
+                        created_by:
+                          id: u_123
+                          name: Jane Doe
+                          email: jane@relayos.com
+                        created_at: '2025-10-20T09:00:00Z'
+                        updated_at: '2025-10-20T10:15:00Z'
+                      - id: req_002
+                        workflow:
+                          id: wf_expense_001
+                          name: Expense Approval
+                          version: 1
+                        status: completed
+                        context:
+                          amount: 800
+                          department: Tech
+                        active_steps: []
+                        created_by:
+                          id: u_456
+                          name: John Smith
+                          email: john@relayos.com
+                        created_at: '2025-10-19T14:00:00Z'
+                        updated_at: '2025-10-19T16:30:00Z'
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 2
+                      total_pages: 1
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      tags:
+        - Requests
+      summary: Create request
+      description: Create a new workflow instance (request) with initial context data
+      operationId: createRequest
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - workflow_id
+                - context
+              properties:
+                workflow_id:
+                  type: string
+                  description: ID or slug of the workflow definition
+                context:
+                  type: object
+                  additionalProperties: true
+                  description: Field values matching the workflow's field definitions
+                observers:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                  description: Email addresses of users to observe this request
+            examples:
+              pricingChangeRequest:
+                value:
+                  workflow_id: pricing-change
+                  context:
+                    merchant_name: Acme Corp
+                    old_price: 5000
+                    new_price: 4500
+                    reason: Volume discount for long-term customer
+                    department: Finance
+                  observers:
+                    - manager@relayos.com
+      responses:
+        '201':
+          description: Request created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowInstanceResponse'
+              examples:
+                createdRequest:
+                  value:
+                    id: req_001
+                    status: running
+                    workflow:
+                      name: Pricing Change Request
+                      version: 2
+                    context:
+                      merchant_name: Acme Corp
+                      old_price: 5000
+                      new_price: 4500
+                      reason: Volume discount for long-term customer
+                      department: Finance
+                    active_steps:
+                      - key: finance_approval
+                        type: approval
+                        assignees:
+                          - id: u_789
+                            name: Finance User
+                            email: finance@company.com
+                        status: pending
+                    created_by:
+                      id: u_123
+                      name: Jane Doe
+                      email: jane@relayos.com
+                    created_at: '2025-10-20T09:00:00Z'
+                    events:
+                      - type: instance_created
+                        created_at: '2025-10-20T09:00:00Z'
+                      - type: condition_evaluated
+                        step_key: cost_check
+                        data:
+                          expression: new_price > 1000 && department == 'Finance'
+                          result: true
+                        created_at: '2025-10-20T09:00:01Z'
+                      - type: task_created
+                        step_key: finance_approval
+                        created_at: '2025-10-20T09:00:02Z'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Workflow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}:
+    get:
+      tags:
+        - Requests
+      summary: Get request details
+      description: Retrieve complete request details including definition, tasks, comments, and events
+      operationId: getRequest
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full request details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowInstanceResponse'
+              examples:
+                fullRequest:
+                  value:
+                    id: req_001
+                    status: running
+                    context:
+                      merchant_name: Acme Corp
+                      old_price: 5000
+                      new_price: 4500
+                      reason: Volume discount
+                      department: Finance
+                    created_by:
+                      id: u_123
+                      name: Jane Doe
+                      email: jane@relayos.com
+                    created_at: '2025-10-20T09:00:00Z'
+                    updated_at: '2025-10-20T11:00:00Z'
+                    definition:
+                      name: Pricing Change Request
+                      version: 2
+                      fields:
+                        - key: merchant_name
+                          label: Merchant name
+                          type: short_text
+                          required: true
+                          position: 0
+                        - key: old_price
+                          label: Old price
+                          type: currency
+                          required: true
+                          position: 1
+                        - key: new_price
+                          label: New price
+                          type: currency
+                          required: true
+                          position: 2
+                        - key: reason
+                          label: Reason for change
+                          type: long_text
+                          position: 3
+                        - key: department
+                          label: Department
+                          type: select
+                          options: [Tech, Finance, Sales]
+                          position: 4
+                      steps:
+                        - key: manager_approval
+                          type: approval
+                          assignees:
+                            - manager@company.com
+                        - key: finance_approval
+                          type: approval
+                          assignees:
+                            - finance@company.com
+                    active_steps:
+                      - key: finance_approval
+                        type: approval
+                        status: pending
+                        assignees:
+                          - id: u_789
+                            name: Finance User
+                            email: finance@company.com
+                        started_at: '2025-10-20T10:15:00Z'
+                    comments:
+                      - id: c_1
+                        author:
+                          id: u_789
+                          name: Finance User
+                          email: finance@company.com
+                        comment: Need more details about the cost calculation
+                        step_key: finance_approval
+                        created_at: '2025-10-20T11:00:00Z'
+                    events:
+                      - type: instance_created
+                        created_at: '2025-10-20T09:00:00Z'
+                      - type: condition_evaluated
+                        step_key: cost_check
+                        data:
+                          expression: new_price > 1000 && department == 'Finance'
+                          result: true
+                        created_at: '2025-10-20T09:01:00Z'
+                      - type: task_created
+                        step_key: finance_approval
+                        created_at: '2025-10-20T09:01:01Z'
+                      - type: comment_added
+                        step_key: finance_approval
+                        actor:
+                          id: u_789
+                          name: Finance User
+                        created_at: '2025-10-20T11:00:00Z'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      tags:
+        - Requests
+      summary: Update request fields
+      description: Update request context fields (only allowed before approval)
+      operationId: updateRequest
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                context:
+                  type: object
+                  additionalProperties: true
+            examples:
+              updateContext:
+                value:
+                  context:
+                    new_price: 4200
+                    reason: Updated volume discount after negotiation
+      responses:
+        '200':
+          description: Request updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowInstanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Conflict - Cannot update after approval has started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/activity:
+    get:
+      tags:
+        - Requests
+      summary: Get request activity timeline
+      description: Retrieve chronological activity feed for a request
+      operationId: getRequestActivity
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Activity timeline
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowEvent'
+              examples:
+                activityTimeline:
+                  value:
+                    events:
+                      - type: instance_created
+                        actor:
+                          id: u_123
+                          name: Jane Doe
+                        created_at: '2025-10-20T09:00:00Z'
+                      - type: condition_evaluated
+                        step_key: department_router
+                        data:
+                          expression: department == 'Finance'
+                          result: true
+                        created_at: '2025-10-20T09:00:01Z'
+                      - type: task_created
+                        step_key: finance_approval
+                        data:
+                          assignee: finance@company.com
+                        created_at: '2025-10-20T09:00:02Z'
+                      - type: comment_added
+                        step_key: finance_approval
+                        actor:
+                          id: u_789
+                          name: Finance User
+                        data:
+                          comment: Need more details
+                        created_at: '2025-10-20T11:00:00Z'
+                      - type: task_completed
+                        step_key: finance_approval
+                        actor:
+                          id: u_789
+                          name: Finance User
+                        data:
+                          decision: approved
+                        created_at: '2025-10-20T12:00:00Z'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /requests/{requestId}/context:
+    patch:
+      tags:
+        - Requests
+      summary: Update request context
+      description: Update runtime context fields that can be used in conditional routing
+      operationId: updateRequestContext
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+            examples:
+              addContextField:
+                value:
+                  approved_by: finance@company.com
+                  approval_comment: Approved due to compliance requirements
+      responses:
+        '200':
+          description: Context updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  context:
+                    type: object
+                    additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /requests/{requestId}/next-steps:
+    get:
+      tags:
+        - Requests
+      summary: Preview next steps
+      description: Preview what steps will activate given the current context
+      operationId: previewNextSteps
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Next steps preview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  next_steps:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                        type:
+                          type: string
+                        assignees:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/UserInfo'
+              examples:
+                nextStepsPreview:
+                  value:
+                    next_steps:
+                      - key: executive_approval
+                        type: approval
+                        assignees:
+                          - id: u_999
+                            name: CEO
+                            email: ceo@company.com
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /requests/{requestId}/approve:
+    post:
+      tags:
+        - Requests
+      summary: Approve request
+      description: |
+        Approve the request at the current user's approval level.
+        The backend automatically records approval metadata (approver, timestamp) in task records and events.
+        Use context_updates to add custom fields that will be merged into the instance context
+        for use in subsequent conditional routing decisions.
+      operationId: approveRequest
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  description: Optional approval comment
+                context_updates:
+                  type: object
+                  additionalProperties: true
+                  description: |
+                    Custom fields to merge into instance context for conditional routing.
+                    Examples: priority level, risk assessment, compliance flags.
+                    Note: Approval metadata (who approved, when) is tracked separately by the backend.
+            examples:
+              approveWithContext:
+                value:
+                  comment: Approved - budget is available
+                  context_updates:
+                    priority: high
+                    risk_level: medium
+                    compliance_checked: true
+      responses:
+        '200':
+          description: Request approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowInstanceResponse'
+              examples:
+                approvedRequest:
+                  value:
+                    id: req_001
+                    status: running
+                    active_steps:
+                      - key: executive_approval
+                        type: approval
+                        assignees:
+                          - id: u_999
+                            name: CEO
+                            email: ceo@company.com
+                        status: pending
+                    completed_steps:
+                      - manager_approval
+                      - finance_approval
+                    events:
+                      - type: task_completed
+                        step_key: finance_approval
+                        actor:
+                          id: u_789
+                          name: Finance User
+                        created_at: '2025-10-20T10:15:00Z'
+                      - type: condition_evaluated
+                        step_key: cost_check
+                        data:
+                          expression: new_price > 10000
+                          result: true
+                        created_at: '2025-10-20T10:15:01Z'
+                      - type: task_created
+                        step_key: executive_approval
+                        created_at: '2025-10-20T10:15:02Z'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden - User is not an assigned approver for this step
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Conflict - Step already completed or request not in running status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/reject:
+    post:
+      tags:
+        - Requests
+      summary: Reject request
+      description: Reject the request with a required comment
+      operationId: rejectRequest
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - comment
+              properties:
+                comment:
+                  type: string
+                  minLength: 1
+                  description: Rejection reason (required)
+            examples:
+              rejectRequest:
+                value:
+                  comment: Budget not available for this pricing change
+      responses:
+        '200':
+          description: Request rejected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowInstanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden - User is not an assigned approver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /requests/{requestId}/changes:
+    post:
+      tags:
+        - Requests
+      summary: Request changes
+      description: Request modifications from the requester
+      operationId: requestChanges
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - comment
+              properties:
+                comment:
+                  type: string
+                  minLength: 1
+                  description: Description of requested changes
+            examples:
+              requestChanges:
+                value:
+                  comment: Please provide more justification for the new pricing
+      responses:
+        '200':
+          description: Changes requested successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowInstanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /requests/{requestId}/observers:
+    post:
+      tags:
+        - Requests
+      summary: Manage observers
+      description: Add or remove observers from a request
+      operationId: manageObservers
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                add:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                remove:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+            examples:
+              addObservers:
+                value:
+                  add:
+                    - manager@relayos.com
+                    - director@relayos.com
+                  remove:
+                    - oldmanager@relayos.com
+      responses:
+        '200':
+          description: Observers updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  observers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserInfo'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /requests/{requestId}/execute:
+    post:
+      tags:
+        - Requests
+      summary: Mark as executed
+      description: |
+        Mark the request as executed by the action taker (after all approvals).
+        The backend automatically records execution metadata (executor, timestamp) in task records and events.
+        Use context_updates to add execution result data to the instance context.
+      operationId: executeRequest
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  description: Execution notes
+                context_updates:
+                  type: object
+                  additionalProperties: true
+                  description: |
+                    Execution result data to merge into instance context.
+                    Examples: system references, transaction IDs, completion status.
+                    Note: Execution metadata (who executed, when) is tracked separately by the backend.
+            examples:
+              executeAction:
+                value:
+                  comment: Pricing updated in the system
+                  context_updates:
+                    system_reference: SYS-12345
+                    transaction_id: TXN-789
+                    execution_status: completed
+      responses:
+        '200':
+          description: Request executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowInstanceResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden - User is not the assigned action taker
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Conflict - Not all approvals are complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/comments:
+    get:
+      tags:
+        - Requests
+      summary: List comments
+      description: Retrieve all comments for a request
+      operationId: listComments
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowComment'
+              examples:
+                commentsList:
+                  value:
+                    comments:
+                      - id: c_1
+                        author:
+                          id: u_789
+                          name: Finance User
+                          email: finance@company.com
+                        comment: Need more details about the cost calculation
+                        step_key: finance_approval
+                        created_at: '2025-10-20T11:00:00Z'
+                      - id: c_2
+                        author:
+                          id: u_123
+                          name: Jane Doe
+                          email: jane@relayos.com
+                        comment: 'Updated: The volume discount is based on annual contract'
+                        step_key: finance_approval
+                        created_at: '2025-10-20T11:30:00Z'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    post:
+      tags:
+        - Requests
+      summary: Add comment
+      description: Add a comment to a request
+      operationId: addComment
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - comment
+              properties:
+                comment:
+                  type: string
+                  minLength: 1
+                step_key:
+                  type: string
+                  description: Optional step context for the comment
+            examples:
+              addComment:
+                value:
+                  comment: This looks good to me, approving now
+                  step_key: finance_approval
+      responses:
+        '201':
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowComment'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from authentication endpoint
+
+  schemas:
+    WorkflowDefinition:
+      type: object
+      required:
+        - id
+        - name
+        - version
+        - status
+        - start_key
+        - fields
+        - steps
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Unique workflow definition identifier
+        name:
+          type: string
+          description: Human-readable workflow name
+        version:
+          type: integer
+          minimum: 1
+          description: Version number (immutable once published)
+        status:
+          type: string
+          enum: [draft, published, archived]
+          description: Workflow lifecycle status
+        start_key:
+          type: string
+          description: Key of the starting step
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldDefinition'
+          description: Form field definitions
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepDefinition'
+          description: Workflow step definitions
+        created_by:
+          $ref: '#/components/schemas/UserInfo'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    FieldDefinition:
+      type: object
+      required:
+        - key
+        - label
+        - type
+      properties:
+        key:
+          type: string
+          pattern: '^[a-z_][a-z0-9_]*$'
+          description: Unique field identifier (snake_case)
+        label:
+          type: string
+          description: Human-readable field label
+        type:
+          type: string
+          enum:
+            - short_text
+            - long_text
+            - currency
+            - amount
+            - select
+            - multi_select
+            - date
+            - datetime
+            - boolean
+            - email
+            - url
+          description: Field data type
+        description:
+          type: string
+          description: Help text for the field
+        required:
+          type: boolean
+          default: false
+          description: Whether the field is mandatory
+        position:
+          type: integer
+          minimum: 0
+          description: Display order position in the UI (lower numbers appear first)
+        options:
+          type: array
+          items:
+            type: string
+          description: Options for select/multi_select fields
+        default:
+          description: Default value for the field
+        validation:
+          type: string
+          description: CEL expression for custom validation
+
+    StepDefinition:
+      type: object
+      required:
+        - key
+        - type
+      properties:
+        key:
+          type: string
+          pattern: '^[a-z_][a-z0-9_]*$'
+          description: Unique step identifier
+        type:
+          type: string
+          enum:
+            - approval
+            - action
+            - gateway:exclusive
+            - gateway:parallel
+            - system_task
+          description: Step type
+        assignees:
+          type: array
+          items:
+            type: string
+            format: email
+          description: Email addresses of users assigned to this step (for approval/action types)
+        assignee:
+          type: string
+          description: Single assignee (for action type)
+        branches:
+          type: array
+          items:
+            $ref: '#/components/schemas/BranchRule'
+          description: Conditional branches (for gateway types)
+        condition:
+          type: string
+          description: CEL expression to evaluate before activating this step
+        next:
+          type: string
+          description: Next step key (for linear flow)
+        join:
+          type: array
+          items:
+            type: string
+          description: |
+            Array of step keys that must ALL complete before this step can activate.
+            Used for parallel workflow convergence where multiple branches must finish before proceeding.
+            Example: For expenses over $5000, both finance_approval AND legal_approval must complete
+            before executive_approval can begin. In this case, executive_approval would have:
+            join: ["finance_approval", "legal_approval"]
+        action:
+          type: object
+          description: Action configuration (for system_task type)
+          properties:
+            type:
+              type: string
+              enum: [webhook, email, auto_approve, delay]
+            url:
+              type: string
+              format: uri
+            delay_seconds:
+              type: integer
+
+    BranchRule:
+      type: object
+      required:
+        - condition
+        - to
+      properties:
+        condition:
+          type: string
+          description: CEL expression to evaluate
+        to:
+          type: string
+          description: Target step key if condition is true
+
+    WorkflowInstanceSummary:
+      type: object
+      required:
+        - id
+        - workflow
+        - status
+        - context
+        - active_steps
+        - created_by
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Unique request identifier
+        workflow:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            version:
+              type: integer
+        status:
+          type: string
+          enum: [running, completed, canceled, failed]
+        context:
+          type: object
+          additionalProperties: true
+          description: Current context data
+        active_steps:
+          type: array
+          items:
+            type: string
+          description: Currently active step keys
+        created_by:
+          $ref: '#/components/schemas/UserInfo'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    WorkflowInstanceResponse:
+      type: object
+      required:
+        - id
+        - status
+        - context
+        - created_by
+        - created_at
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [running, completed, canceled, failed]
+        context:
+          type: object
+          additionalProperties: true
+        created_by:
+          $ref: '#/components/schemas/UserInfo'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        definition:
+          type: object
+          properties:
+            name:
+              type: string
+            version:
+              type: integer
+            fields:
+              type: array
+              items:
+                $ref: '#/components/schemas/FieldDefinition'
+            steps:
+              type: array
+              items:
+                $ref: '#/components/schemas/StepDefinition'
+        active_steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepRuntime'
+        completed_steps:
+          type: array
+          items:
+            type: string
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowComment'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowEvent'
+
+    StepRuntime:
+      type: object
+      required:
+        - key
+        - type
+        - status
+      properties:
+        key:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed, skipped, rejected]
+        assignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserInfo'
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    WorkflowComment:
+      type: object
+      required:
+        - id
+        - author
+        - comment
+        - created_at
+      properties:
+        id:
+          type: string
+        author:
+          $ref: '#/components/schemas/UserInfo'
+        comment:
+          type: string
+        step_key:
+          type: string
+          description: Optional step context
+        created_at:
+          type: string
+          format: date-time
+
+    WorkflowEvent:
+      type: object
+      required:
+        - type
+        - created_at
+      properties:
+        type:
+          type: string
+          enum:
+            - instance_created
+            - task_created
+            - task_completed
+            - task_rejected
+            - condition_evaluated
+            - comment_added
+            - attachment_added
+            - context_updated
+            - step_activated
+            - instance_completed
+            - instance_canceled
+        step_key:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        actor:
+          $ref: '#/components/schemas/UserInfo'
+        created_at:
+          type: string
+          format: date-time
+
+    UserInfo:
+      type: object
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    UserTask:
+      type: object
+      required:
+        - id
+        - request_id
+        - workflow
+        - step_key
+        - step_type
+        - status
+        - assigned_at
+        - requester
+      properties:
+        id:
+          type: string
+          description: Task identifier
+        request_id:
+          type: string
+          description: Associated request ID
+        request_context:
+          type: object
+          additionalProperties: true
+          description: Relevant context fields from the request
+        workflow:
+          type: object
+          required:
+            - id
+            - name
+            - version
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            version:
+              type: integer
+        step_key:
+          type: string
+          description: Current step identifier
+        step_type:
+          type: string
+          enum: [approval, action]
+          description: Type of task
+        status:
+          type: string
+          enum: [pending, in_progress]
+          description: Current task status
+        assigned_at:
+          type: string
+          format: date-time
+          description: When the task was assigned
+        requester:
+          $ref: '#/components/schemas/UserInfo'
+
+    Pagination:
+      type: object
+      required:
+        - page
+        - limit
+        - total
+        - total_pages
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        total_pages:
+          type: integer
+          minimum: 0
+
+    ErrorResponse:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI reference identifying the problem type
+        title:
+          type: string
+          description: Short, human-readable summary
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation
+        instance:
+          type: string
+          format: uri
+          description: URI reference identifying the specific occurrence
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+  responses:
+    BadRequestError:
+      description: Bad request - Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            type: https://api.relayos.app/errors/bad-request
+            title: Bad Request
+            status: 400
+            detail: Invalid input data
+            errors:
+              - field: context.new_price
+                message: must be a positive number
+
+    UnauthorizedError:
+      description: Unauthorized - Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            type: https://api.relayos.app/errors/unauthorized
+            title: Unauthorized
+            status: 401
+            detail: Valid authentication credentials required
+
+    ForbiddenError:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            type: https://api.relayos.app/errors/forbidden
+            title: Forbidden
+            status: 403
+            detail: You do not have permission to perform this action
+
+    NotFoundError:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            type: https://api.relayos.app/errors/not-found
+            title: Not Found
+            status: 404
+            detail: The requested resource was not found
+
