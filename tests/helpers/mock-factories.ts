@@ -1,13 +1,15 @@
-import type { UserData } from '~/types/auth'
+import type { User } from '~/models/user'
+import { UserRole } from '~/models/user'
 
-export const createMockUser = (overrides: Partial<UserData> = {}): UserData => ({
-  id: 1,
-  name: 'Test User',
+export const createMockUser = (overrides: Partial<User> = {}): User => ({
+  id: 'user-1',
+  firstName: 'Test',
+  lastName: 'User',
   email: 'test@example.com',
-  email_verified_at: null,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  unread_emails_count: 0,
+  phonenumber: '+234 800 000 0000',
+  role: UserRole.User,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   ...overrides,
 })
 

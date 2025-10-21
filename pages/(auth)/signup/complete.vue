@@ -71,10 +71,14 @@ onMounted(async () => {
   }
 
   try {
+    const { UserMapper } = await import('@/models/user')
     const response = await verifyEmail(token)
     
     if (response.data) {
-      const { token: authToken, user } = response.data
+      const { token: authToken, user: userDTO } = response.data
+      
+      // Transform DTO to domain model
+      const user = UserMapper.toModel(userDTO)
       
       authStore.setToken(authToken)
       authStore.setUser(user)
