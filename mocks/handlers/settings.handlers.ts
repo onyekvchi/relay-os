@@ -123,7 +123,7 @@ export const settingsHandlers = [
     })
   }),
 
-  // GET /settings/workspace/team - Get team members (WorkspaceManager/Admin only)
+  // GET /settings/workspace/team - Get team members (All authenticated users can view)
   http.get(`${API_BASE}/settings/workspace/team`, ({ request }) => {
     const user = getCurrentUser(request)
 
@@ -137,17 +137,7 @@ export const settingsHandlers = [
       )
     }
 
-    // Check if user has permission to view team
-    if (user.role !== 'Admin' && user.role !== 'WorkspaceManager') {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Insufficient permissions',
-        },
-        { status: 403 }
-      )
-    }
-
+    // All authenticated users can view team members
     // Get all users (in a real app, would filter by workspace)
     const teamMembers = db.user.findMany({})
 
