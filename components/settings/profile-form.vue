@@ -1,5 +1,23 @@
 <template>
   <div class="max-w-lg">
+    <!-- Success/Error Messages -->
+    <UAlert
+      v-if="successMessage"
+      color="success"
+      variant="soft"
+      :title="successMessage"
+      :close-button="{ icon: 'i-heroicons-x-mark-20-solid', color: 'gray', variant: 'link' }"
+      @close="successMessage = null"
+    />
+    <UAlert
+      v-if="errorMessage"
+      color="error"
+      variant="soft"
+      :title="errorMessage"
+      :close-button="{ icon: 'i-heroicons-x-mark-20-solid', color: 'gray', variant: 'link' }"
+      @close="errorMessage = null"
+    />
+
     <!-- Profile Picture -->
     <div class="flex items-center justify-between py-4 border-b border-muted">
       <label class="text-sm font-semibold">Profile picture</label>
@@ -26,44 +44,93 @@
       </div>
     </div>
 
-    <!-- Email -->
+    <!-- Email (Read-only) -->
     <div class="flex items-center justify-between py-4 border-b border-muted">
       <label class="text-sm font-semibold">Email</label>
-      <div class="flex items-center gap-2">
-        <span class="text-sm">{{ user?.email }}</span>
-        <UButton variant="ghost" size="xs" icon="i-heroicons-pencil" />
-      </div>
+      <span class="text-sm text-muted">{{ user?.email }}</span>
     </div>
 
-    <!-- Full Name -->
+    <!-- First Name -->
     <div class="flex items-center justify-between py-4 border-b border-muted">
-      <label class="text-sm font-semibold">Full name</label>
+      <label class="text-sm font-semibold">First name</label>
       <UInput 
-        v-model="fullName" 
+        v-model="firstName" 
         class="w-48"
-        placeholder="Enter your full name"
+        placeholder="Enter first name"
       />
+    </div>
+
+    <!-- Last Name -->
+    <div class="flex items-center justify-between py-4 border-b border-muted">
+      <label class="text-sm font-semibold">Last name</label>
+      <UInput 
+        v-model="lastName" 
+        class="w-48"
+        placeholder="Enter last name"
+      />
+    </div>
+
+    <!-- Phone Number -->
+    <div class="flex items-center justify-between py-4 border-b border-muted">
+      <label class="text-sm font-semibold">Phone number</label>
+      <UInput 
+        v-model="phoneNumber" 
+        class="w-48"
+        placeholder="+234 800 000 0000"
+      />
+    </div>
+
+    <!-- Save Button -->
+    <div class="flex justify-end pt-4">
+      <UButton
+        :loading="isSaving"
+        :disabled="!hasChanges"
+        @click="handleSave"
+      >
+        Save changes
+      </UButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { UserMapper } from '@/models/user'
+
 const authStore = useAuthStore()
+const { updateProfile } = useSettingsApi()
 const user = computed(() => authStore.getUser)
 
-const fullName = ref(`${user.value?.firstName || ''} ${user.value?.lastName || ''}`.trim())
+// Form fields
+const firstName = ref(user.value?.firstName || '')
+const lastName = ref(user.value?.lastName || '')
+const phoneNumber = ref(user.value?.phonenumber || '')
 const profilePicture = ref<string | undefined>(undefined)
 const fileInput = ref<HTMLInputElement | null>(null)
 
+// UI state
+const isSaving = ref(false)
+const successMessage = ref<string | null>(null)
+const errorMessage = ref<string | null>(null)
+
+// Computed
 const userInitials = computed(() => {
-  const firstName = user.value?.firstName || ''
-  const lastName = user.value?.lastName || ''
-  if (firstName && lastName) {
-    return firstName[0] + lastName[0]
+  const first = user.value?.firstName || ''
+  const last = user.value?.lastName || ''
+  if (first && last) {
+    return first[0] + last[0]
   }
-  return firstName[0] || 'U'
+  return first[0] || 'U'
 })
 
+const hasChanges = computed(() => {
+  return (
+    firstName.value !== user.value?.firstName ||
+    lastName.value !== user.value?.lastName ||
+    phoneNumber.value !== user.value?.phonenumber
+  )
+})
+
+// Methods
 function triggerFileInput() {
   fileInput.value?.click()
 }
@@ -78,6 +145,36 @@ function handleFileChange(event: Event) {
       profilePicture.value = e.target?.result as string
     }
     reader.readAsDataURL(file)
+  }
+}
+
+async function handleSave() {
+  isSaving.value = true
+  successMessage.value = null
+  errorMessage.value = null
+
+  try {
+    const { data, error } = await updateProfile({
+      first_name: firstName.value,
+      last_name: lastName.value,
+      phone_number: phoneNumber.value,
+    })
+
+    if (error.value) {
+      throw new Error(error.value.message || 'Failed to update profile')
+    }
+
+    if (data.value?.data) {
+      // Transform DTO to model and update store
+      const updatedUser = UserMapper.toModel(data.value.data)
+      authStore.setUser(updatedUser)
+      
+      successMessage.value = 'Profile updated successfully'
+    }
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Failed to update profile'
+  } finally {
+    isSaving.value = false
   }
 }
 </script>

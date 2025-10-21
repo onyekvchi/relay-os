@@ -5,12 +5,16 @@ import { requestHandlers } from './handlers/request.handlers'
 import { userHandlers } from './handlers/user.handlers'
 import { dashboardHandlers } from './handlers/dashboard.handlers'
 import { authHandlers } from './handlers/auth.handlers'
+import { settingsHandlers } from './handlers/settings.handlers'
 
 const API_BASE = 'http://localhost:8000/api/v1'
 
 export const handlers = [
   // Auth handlers (must be first to handle authentication)
   ...authHandlers,
+
+  // Settings handlers
+  ...settingsHandlers,
 
   // Dashboard handlers
   ...dashboardHandlers,

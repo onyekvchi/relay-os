@@ -25,6 +25,7 @@ export type ResetPasswordRequest = {
 export type UpdateProfileRequest = {
   first_name?: string
   last_name?: string
+  phone_number?: string
 }
 
 export type UpdatePasswordRequest = {
