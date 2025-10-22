@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { db } from '../db'
+import { getCurrentUser } from './auth.handlers'
+import { isAdmin } from '../permissions'
 import type { UserDTO, UpdateUserRequest } from '@/models/user/user.dto'
 
 const API_BASE = 'http://localhost:8000/api/v1'
@@ -23,6 +25,18 @@ function buildUserDTO(user: any): UserDTO {
 export const userHandlers = [
   // GET /users - List all users
   http.get(`${API_BASE}/users`, ({ request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const url = new URL(request.url)
     const role = url.searchParams.get('role')
 
@@ -45,7 +59,19 @@ export const userHandlers = [
   }),
 
   // GET /users/:id - Get single user
-  http.get(`${API_BASE}/users/:id`, ({ params }) => {
+  http.get(`${API_BASE}/users/:id`, ({ params, request }) => {
+    const currentUser = getCurrentUser(request)
+
+    if (!currentUser) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const { id } = params
 
     const user = db.user.findFirst({
@@ -72,6 +98,29 @@ export const userHandlers = [
 
   // PUT /users/:id - Update user
   http.put(`${API_BASE}/users/:id`, async ({ params, request }) => {
+    const currentUser = getCurrentUser(request)
+
+    if (!currentUser) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
+    // Only Admin can update users
+    if (!isAdmin(currentUser)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to update users',
+        },
+        { status: 403 }
+      )
+    }
+
     const { id } = params
     const body = await request.json() as UpdateUserRequest
 
@@ -112,11 +161,7 @@ export const userHandlers = [
 
   // GET /users/me - Get current authenticated user
   http.get(`${API_BASE}/users/me`, ({ request }) => {
-    // TODO: Get user ID from auth token
-    // For now, return the admin user
-    const user = db.user.findFirst({
-      where: { id: { equals: 'user-1' } },
-    })
+    const user = getCurrentUser(request)
 
     if (!user) {
       return HttpResponse.json(

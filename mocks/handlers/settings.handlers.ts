@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { db } from '../db'
 import { getCurrentUser } from './auth.handlers'
+import { hasPermission, Permission, isAdmin, isWorkspaceManagerOrAdmin } from '../permissions'
 import type { UpdateProfileRequest, UpdatePasswordRequest } from '~/types/auth'
 
 const API_BASE = 'http://localhost:8000/api/v1'
@@ -162,11 +163,11 @@ export const settingsHandlers = [
     }
 
     // Check if user has permission to add team members
-    if (user.role !== 'Admin' && user.role !== 'WorkspaceManager') {
+    if (!hasPermission(user, Permission.ADD_TEAM_MEMBER)) {
       return HttpResponse.json(
         {
           success: false,
-          message: 'Insufficient permissions',
+          message: 'Insufficient permissions to add team members',
         },
         { status: 403 }
       )
@@ -232,11 +233,11 @@ export const settingsHandlers = [
     }
 
     // Check if user has permission to remove team members
-    if (user.role !== 'Admin') {
+    if (!hasPermission(user, Permission.REMOVE_TEAM_MEMBER)) {
       return HttpResponse.json(
         {
           success: false,
-          message: 'Insufficient permissions',
+          message: 'Insufficient permissions to remove team members',
         },
         { status: 403 }
       )
@@ -294,11 +295,11 @@ export const settingsHandlers = [
     }
 
     // Check if user has permission to update workspace
-    if (user.role !== 'Admin' && user.role !== 'Workspace Manager') {
+    if (!hasPermission(user, Permission.UPDATE_WORKSPACE)) {
       return HttpResponse.json(
         {
           success: false,
-          message: 'Insufficient permissions',
+          message: 'Insufficient permissions to update workspace',
         },
         { status: 403 }
       )
