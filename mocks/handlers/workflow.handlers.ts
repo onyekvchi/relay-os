@@ -1,6 +1,8 @@
 import { http, HttpResponse } from 'msw'
 import { db } from '../db'
-import type { WorkflowDTO, CreateWorkflowRequest, UpdateWorkflowRequest } from '@/models/workflow/workflow.dto'
+import { getCurrentUser } from './auth.handlers'
+import { hasPermission, Permission } from '../permissions'
+import type { CreateWorkflowRequest, UpdateWorkflowRequest, WorkflowDTO } from '@/models/workflow/workflow.dto'
 import type { UserDTO } from '@/models/user/user.dto'
 
 const API_BASE = 'http://localhost:8000/api/v1'
@@ -115,6 +117,29 @@ export const workflowHandlers = [
 
   // POST /workflows - Create workflow
   http.post(`${API_BASE}/workflows`, async ({ request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
+    // Check permission: Only Admin and Workspace Manager can create workflows
+    if (!hasPermission(user, Permission.CREATE_WORKFLOW)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to create workflows',
+        },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json() as CreateWorkflowRequest
 
     // Validate required fields
@@ -136,7 +161,7 @@ export const workflowHandlers = [
       name: body.name,
       description: body.description || null,
       is_archived: false,
-      created_by_id: 'user-1', // TODO: Get from auth token
+      created_by_id: user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -182,6 +207,29 @@ export const workflowHandlers = [
 
   // PUT /workflows/:id - Update workflow
   http.put(`${API_BASE}/workflows/:id`, async ({ params, request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
+    // Check permission: Only Admin and Workspace Manager can update workflows
+    if (!hasPermission(user, Permission.UPDATE_WORKFLOW)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to update workflows',
+        },
+        { status: 403 }
+      )
+    }
+
     const { id } = params
     const body = await request.json() as UpdateWorkflowRequest
 
@@ -267,7 +315,30 @@ export const workflowHandlers = [
   }),
 
   // DELETE /workflows/:id - Archive workflow
-  http.delete(`${API_BASE}/workflows/:id`, ({ params }) => {
+  http.delete(`${API_BASE}/workflows/:id`, ({ params, request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
+    // Check permission: Only Admin and Workspace Manager can delete workflows
+    if (!hasPermission(user, Permission.DELETE_WORKFLOW)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to delete workflows',
+        },
+        { status: 403 }
+      )
+    }
+
     const { id } = params
 
     const workflow = db.workflow.findFirst({
