@@ -1,0 +1,1999 @@
+openapi: 3.0.3
+info:
+  title: RelayOS API
+  description: API for RelayOS - Workflow and request management system
+  version: 1.0.0
+  contact:
+    name: RelayOS Team
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Profile
+    description: User profile management
+  - name: Security
+    description: Security and password management
+  - name: Workspace
+    description: Workspace settings and management
+  - name: Team
+    description: Team member management
+  - name: Users
+    description: User management and listing
+  - name: Dashboard
+    description: Dashboard statistics and activity
+  - name: Workflows
+    description: Workflow creation and management
+  - name: Requests
+    description: Request creation and management
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user-1"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        phone_number:
+          type: string
+          example: "+234 800 123 4567"
+        role:
+          type: string
+          enum: [Admin, Workspace Manager, Finance Approver, User]
+          example: "User"
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "demo@relayos.com"
+        password:
+          type: string
+          format: password
+          example: "password123"
+        device_name:
+          type: string
+          example: "Chrome on macOS"
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Login successful"
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            token:
+              type: string
+              example: "token-1234567890-abcdef"
+
+    RegisterRequest:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+        - password
+      properties:
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "password123"
+        phone_number:
+          type: string
+          example: "+234 800 123 4567"
+        device_name:
+          type: string
+          example: "Chrome on macOS"
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        phone_number:
+          type: string
+          example: "+234 800 123 4567"
+
+    UpdatePasswordRequest:
+      type: object
+      required:
+        - current_password
+        - new_password
+      properties:
+        current_password:
+          type: string
+          format: password
+          example: "oldpassword123"
+        new_password:
+          type: string
+          format: password
+          minLength: 8
+          example: "newpassword123"
+
+    InviteTeamMemberRequest:
+      type: object
+      required:
+        - email
+        - first_name
+        - last_name
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: "newmember@example.com"
+        first_name:
+          type: string
+          example: "Jane"
+        last_name:
+          type: string
+          example: "Smith"
+        role:
+          type: string
+          enum: [Admin, WorkspaceManager, FinanceApprover, User]
+          example: "User"
+
+    WorkspaceSettings:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "AndCo Labs"
+        logo:
+          type: string
+          format: uri
+          nullable: true
+          example: "data:image/png;base64,..."
+
+    Workflow:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "workflow-1"
+        name:
+          type: string
+          example: "Pricing Change Request"
+        description:
+          type: string
+          nullable: true
+          example: "Request to change customer pricing"
+        is_archived:
+          type: boolean
+          example: false
+        created_by_id:
+          type: string
+          example: "user-1"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowField'
+        approvals:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowApproval'
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowAction'
+
+    WorkflowField:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "field-1"
+        workflow_id:
+          type: string
+          example: "workflow-1"
+        label:
+          type: string
+          example: "Merchant name"
+        type:
+          type: string
+          enum: [string, text, amount, integer, decimal, list, user, entity]
+          example: "string"
+        description:
+          type: string
+          example: "Whose pricing do you want to change?"
+        required:
+          type: boolean
+          example: true
+        order:
+          type: integer
+          example: 0
+
+    WorkflowApproval:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "approval-1"
+        workflow_id:
+          type: string
+          example: "workflow-1"
+        approver_id:
+          type: string
+          example: "user-1"
+        order:
+          type: integer
+          example: 0
+
+    WorkflowAction:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "action-1"
+        workflow_id:
+          type: string
+          example: "workflow-1"
+        actor_id:
+          type: string
+          example: "user-1"
+
+    Request:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "request-1"
+        workflow_id:
+          type: string
+          example: "workflow-1"
+        initiator_id:
+          type: string
+          example: "user-1"
+        status:
+          type: string
+          enum: [Awaiting Approval, Changes Requested, Awaiting Action, Completed, Rejected, Cancelled]
+          example: "Awaiting Approval"
+        field_values:
+          type: object
+          additionalProperties: true
+          example:
+            "Merchant name": "Acme Corp"
+            "Old price": "5000"
+            "New price": "4500"
+        observer_ids:
+          type: array
+          items:
+            type: string
+          example: []
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        workflow:
+          $ref: '#/components/schemas/Workflow'
+        initiator:
+          $ref: '#/components/schemas/User'
+        approvals:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestApproval'
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestLog'
+
+    RequestApproval:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "req-approval-1"
+        request_id:
+          type: string
+          example: "request-1"
+        workflow_approval_id:
+          type: string
+          example: "approval-1"
+        status:
+          type: string
+          enum: [Pending, Approved, Rejected]
+          example: "Pending"
+        comment:
+          type: string
+          nullable: true
+          example: "Looks good to me"
+        actioned_at:
+          type: string
+          format: date-time
+          nullable: true
+        actioned_by_id:
+          type: string
+          nullable: true
+
+    RequestLog:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "log-1"
+        request_id:
+          type: string
+          example: "request-1"
+        action:
+          type: string
+          enum: [create, approve, requestChange, reject, cancel, complete, comment, update]
+          example: "create"
+        user_id:
+          type: string
+          example: "user-1"
+        comment:
+          type: string
+          nullable: true
+          example: "Request created"
+        created_at:
+          type: string
+          format: date-time
+
+    CreateWorkflowRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "Pricing Change Request"
+        description:
+          type: string
+          example: "Request to change customer pricing"
+        fields:
+          type: array
+          items:
+            type: object
+            required:
+              - label
+              - type
+            properties:
+              label:
+                type: string
+              type:
+                type: string
+                enum: [string, text, amount, integer, decimal, list, user, entity]
+              description:
+                type: string
+              required:
+                type: boolean
+        approver_ids:
+          type: array
+          items:
+            type: string
+          example: ["user-1", "user-2"]
+        actor_ids:
+          type: array
+          items:
+            type: string
+          example: ["user-3"]
+
+    CreateRequestRequest:
+      type: object
+      required:
+        - workflow_id
+        - field_values
+      properties:
+        workflow_id:
+          type: string
+          example: "workflow-1"
+        field_values:
+          type: object
+          additionalProperties: true
+          example:
+            "Merchant name": "Acme Corp"
+            "Old price": "5000"
+            "New price": "4500"
+        observer_ids:
+          type: array
+          items:
+            type: string
+          example: []
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "An error occurred"
+        errors:
+          type: array
+          items:
+            type: string
+
+paths:
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate a user with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Create a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: Invalidate the current user's token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user
+      description: Get the currently authenticated user's information
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /forgot-password:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      description: Send password reset email to user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        '200':
+          description: Password reset email sent (if email exists)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "If an account exists with this email, you will receive a password reset link."
+
+  /reset-password:
+    post:
+      tags:
+        - Authentication
+      summary: Reset password
+      description: Reset user password with reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - password_confirmation
+                - token
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: "newpassword123"
+                password_confirmation:
+                  type: string
+                  format: password
+                  example: "newpassword123"
+                token:
+                  type: string
+                  example: "reset-token-123"
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Password reset successfully"
+        '400':
+          description: Invalid token or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /settings/profile:
+    get:
+      tags:
+        - Profile
+      summary: Get current user profile
+      description: Retrieve the authenticated user's profile information
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+        - Profile
+      summary: Update user profile
+      description: Update the authenticated user's profile information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Profile updated successfully"
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /settings/security:
+    patch:
+      tags:
+        - Security
+      summary: Update password
+      description: Change the authenticated user's password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordRequest'
+      responses:
+        '200':
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Password updated successfully"
+        '400':
+          description: Invalid current password or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /settings/workspace:
+    get:
+      tags:
+        - Workspace
+      summary: Get workspace settings
+      description: Retrieve workspace settings (name, logo)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Workspace settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/WorkspaceSettings'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+        - Workspace
+      summary: Update workspace settings
+      description: Update workspace settings (Admin and Workspace Manager only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceSettings'
+      responses:
+        '200':
+          description: Workspace updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/WorkspaceSettings'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /settings/workspace/team:
+    get:
+      tags:
+        - Team
+      summary: Get team members
+      description: Retrieve all team members in the workspace
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Team members retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Team
+      summary: Invite team member
+      description: Invite a new team member (Admin and Workspace Manager only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteTeamMemberRequest'
+      responses:
+        '201':
+          description: Team member invited successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Team member added successfully"
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /settings/workspace/team/{userId}:
+    delete:
+      tags:
+        - Team
+      summary: Remove team member
+      description: Remove a team member from the workspace (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID of the user to remove
+          schema:
+            type: string
+            example: "user-123"
+      responses:
+        '200':
+          description: Team member removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Team member removed successfully"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Team member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List all users
+      description: Get a list of all users (optionally filtered by role)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          required: false
+          description: Filter by user role
+          schema:
+            type: string
+            enum: [Admin, Workspace Manager, Finance Approver, User]
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{userId}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      description: Retrieve a specific user's information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: string
+            example: "user-1"
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Users
+      summary: Update user
+      description: Update a user's information (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: string
+            example: "user-1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  example: "John"
+                last_name:
+                  type: string
+                  example: "Doe"
+                phone_number:
+                  type: string
+                  example: "+234 800 123 4567"
+                role:
+                  type: string
+                  enum: [Admin, Workspace Manager, Finance Approver, User]
+                  example: "User"
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User updated successfully"
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user
+      description: Get the currently authenticated user (alias for /auth/me)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dashboard/popular-workflows:
+    get:
+      tags:
+        - Dashboard
+      summary: Get popular workflows
+      description: Get the top 3 most used workflows
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Popular workflows retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Workflow'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dashboard/pending-actions:
+    get:
+      tags:
+        - Dashboard
+      summary: Get pending actions
+      description: Get requests awaiting approval (up to 5)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Pending actions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Request'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dashboard/recent-activity:
+    get:
+      tags:
+        - Dashboard
+      summary: Get recent activity
+      description: Get the last 8 activity log entries
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recent activity retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        request_id:
+                          type: string
+                        request:
+                          $ref: '#/components/schemas/Request'
+                        action:
+                          type: string
+                        user_id:
+                          type: string
+                        user:
+                          $ref: '#/components/schemas/User'
+                        comment:
+                          type: string
+                          nullable: true
+                        created_at:
+                          type: string
+                          format: date-time
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /workflows:
+    get:
+      tags:
+        - Workflows
+      summary: Get all workflows
+      description: Retrieve all workflows (non-archived by default)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: include_archived
+          in: query
+          required: false
+          description: Include archived workflows
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Workflows retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Workflow'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Workflows
+      summary: Create workflow
+      description: Create a new workflow (Admin and Workspace Manager only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkflowRequest'
+      responses:
+        '201':
+          description: Workflow created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Workflow'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /workflows/{workflowId}:
+    get:
+      tags:
+        - Workflows
+      summary: Get workflow by ID
+      description: Retrieve a specific workflow with all its details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          description: ID of the workflow
+          schema:
+            type: string
+            example: "workflow-1"
+      responses:
+        '200':
+          description: Workflow retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Workflow'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Workflow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+        - Workflows
+      summary: Update workflow
+      description: Update an existing workflow (Admin and Workspace Manager only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          description: ID of the workflow
+          schema:
+            type: string
+            example: "workflow-1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkflowRequest'
+      responses:
+        '200':
+          description: Workflow updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Workflow'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Workflow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Workflows
+      summary: Archive workflow
+      description: Archive a workflow (Admin and Workspace Manager only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          description: ID of the workflow
+          schema:
+            type: string
+            example: "workflow-1"
+      responses:
+        '200':
+          description: Workflow archived successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Workflow archived successfully"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Workflow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests:
+    get:
+      tags:
+        - Requests
+      summary: Get all requests
+      description: Retrieve all requests (filtered by user role and permissions)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by request status
+          schema:
+            type: string
+            enum: [Awaiting Approval, Changes Requested, Awaiting Action, Completed, Rejected, Cancelled]
+        - name: workflow_id
+          in: query
+          required: false
+          description: Filter by workflow ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Request'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Requests
+      summary: Create request
+      description: Create a new request for a workflow
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequestRequest'
+      responses:
+        '201':
+          description: Request created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Request'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}:
+    get:
+      tags:
+        - Requests
+      summary: Get request by ID
+      description: Retrieve a specific request with all its details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: ID of the request
+          schema:
+            type: string
+            example: "request-1"
+      responses:
+        '200':
+          description: Request retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Request'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/approve:
+    post:
+      tags:
+        - Requests
+      summary: Approve request
+      description: Approve a request at the current approval step
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: ID of the request
+          schema:
+            type: string
+            example: "request-1"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  example: "Looks good to me"
+      responses:
+        '200':
+          description: Request approved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Request'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/reject:
+    post:
+      tags:
+        - Requests
+      summary: Reject request
+      description: Reject a request at the current approval step
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: ID of the request
+          schema:
+            type: string
+            example: "request-1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - comment
+              properties:
+                comment:
+                  type: string
+                  example: "Needs more information"
+      responses:
+        '200':
+          description: Request rejected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Request'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/request-changes:
+    post:
+      tags:
+        - Requests
+      summary: Request changes
+      description: Request changes to a request (for approvers)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: ID of the request
+          schema:
+            type: string
+            example: "request-1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  example: "Please provide more details on the pricing justification"
+      responses:
+        '200':
+          description: Changes requested successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Changes requested"
+                  data:
+                    $ref: '#/components/schemas/Request'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/comment:
+    post:
+      tags:
+        - Requests
+      summary: Add comment
+      description: Add a comment to a request
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: ID of the request
+          schema:
+            type: string
+            example: "request-1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - comment
+              properties:
+                comment:
+                  type: string
+                  example: "This looks good, proceeding with approval"
+      responses:
+        '200':
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Comment added successfully"
+                  data:
+                    $ref: '#/components/schemas/Request'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/complete:
+    post:
+      tags:
+        - Requests
+      summary: Complete request
+      description: Mark a request as completed (for assigned actors)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: ID of the request
+          schema:
+            type: string
+            example: "request-1"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  example: "Task completed successfully"
+      responses:
+        '200':
+          description: Request completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Request'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /requests/{requestId}/cancel:
+    post:
+      tags:
+        - Requests
+      summary: Cancel request
+      description: Cancel a request (initiator only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: ID of the request
+          schema:
+            type: string
+            example: "request-1"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                  example: "No longer needed"
+      responses:
+        '200':
+          description: Request cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Request'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+security:
+  - bearerAuth: []
