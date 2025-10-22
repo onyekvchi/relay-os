@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { db } from '../db'
+import { getCurrentUser } from './auth.handlers'
+import { canViewRequest, canApproveRequest, canCompleteRequest, canEditRequest, filterRequestsByPermission } from '../permissions'
 import type { RequestDTO, CreateRequestRequest, ApproveRequestRequest, RejectRequestRequest, RequestChangesRequest } from '@/models/request/request.dto'
 import type { UserDTO } from '@/models/user/user.dto'
 import type { WorkflowDTO } from '@/models/workflow/workflow.dto'
@@ -149,6 +151,18 @@ export function buildRequestDTO(request: any): RequestDTO {
 export const requestHandlers = [
   // GET /requests - List all requests
   http.get(`${API_BASE}/requests`, ({ request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const url = new URL(request.url)
     const status = url.searchParams.get('status')
     const workflowId = url.searchParams.get('workflow_id')
@@ -166,7 +180,9 @@ export const requestHandlers = [
       where: Object.keys(whereClause).length > 0 ? whereClause : {},
     })
 
-    const requestDTOs = requests.map(r => buildRequestDTO(r))
+    // Filter requests based on user permissions
+    const filteredRequests = filterRequestsByPermission(user, requests)
+    const requestDTOs = filteredRequests.map(r => buildRequestDTO(r))
 
     return HttpResponse.json({
       success: true,
@@ -175,14 +191,26 @@ export const requestHandlers = [
   }),
 
   // GET /requests/:id - Get single request
-  http.get(`${API_BASE}/requests/:id`, ({ params }) => {
+  http.get(`${API_BASE}/requests/:id`, ({ params, request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const { id } = params
 
-    const request = db.request.findFirst({
+    const req = db.request.findFirst({
       where: { id: { equals: id as string } },
     })
 
-    if (!request) {
+    if (!req) {
       return HttpResponse.json(
         {
           success: false,
@@ -192,7 +220,18 @@ export const requestHandlers = [
       )
     }
 
-    const requestDTO = buildRequestDTO(request)
+    // Check if user can view this request
+    if (!canViewRequest(user, req)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to view this request',
+        },
+        { status: 403 }
+      )
+    }
+
+    const requestDTO = buildRequestDTO(req)
 
     return HttpResponse.json({
       success: true,
@@ -202,6 +241,18 @@ export const requestHandlers = [
 
   // POST /requests - Create request
   http.post(`${API_BASE}/requests`, async ({ request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json() as CreateRequestRequest
 
     // Validate required fields
@@ -233,12 +284,11 @@ export const requestHandlers = [
 
     // Create request
     const requestId = `request-${Date.now()}`
-    const initiatorId = 'user-4' // TODO: Get from auth token
     
     const newRequest = db.request.create({
       id: requestId,
       workflow_id: body.workflow_id,
-      initiator_id: initiatorId,
+      initiator_id: user.id,
       status: 'Awaiting Approval',
       field_values: JSON.stringify(body.field_values),
       observer_ids: JSON.stringify(body.observer_ids || []),
@@ -251,7 +301,7 @@ export const requestHandlers = [
       id: `log-${requestId}-1`,
       request_id: requestId,
       action: 'create',
-      user_id: initiatorId,
+      user_id: user.id,
       comment: null,
       created_at: new Date().toISOString(),
     })
@@ -284,6 +334,18 @@ export const requestHandlers = [
 
   // POST /requests/:id/approve - Approve a request
   http.post(`${API_BASE}/requests/:id/approve`, async ({ params, request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const { id } = params
     const body = await request.json() as ApproveRequestRequest
 
@@ -298,6 +360,17 @@ export const requestHandlers = [
           message: 'Request not found',
         },
         { status: 404 }
+      )
+    }
+
+    // Check if user can approve this request
+    if (!canApproveRequest(user, req)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to approve this request',
+        },
+        { status: 403 }
       )
     }
 
@@ -317,14 +390,13 @@ export const requestHandlers = [
     }
 
     // Update approval
-    const approverId = 'user-1' // TODO: Get from auth token
     db.requestApproval.update({
       where: { id: { equals: body.approval_id } },
       data: {
         status: 'Approved',
         comment: body.comment || null,
         actioned_at: new Date().toISOString(),
-        actioned_by_id: approverId,
+        actioned_by_id: user.id,
       },
     })
 
@@ -333,7 +405,7 @@ export const requestHandlers = [
       id: `log-${id}-${Date.now()}`,
       request_id: id as string,
       action: 'approve',
-      user_id: approverId,
+      user_id: user.id,
       comment: body.comment || null,
       created_at: new Date().toISOString(),
     })
@@ -369,6 +441,18 @@ export const requestHandlers = [
 
   // POST /requests/:id/reject - Reject a request
   http.post(`${API_BASE}/requests/:id/reject`, async ({ params, request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const { id } = params
     const body = await request.json() as RejectRequestRequest
 
@@ -383,6 +467,17 @@ export const requestHandlers = [
           message: 'Request not found',
         },
         { status: 404 }
+      )
+    }
+
+    // Check if user can approve/reject this request
+    if (!canApproveRequest(user, req)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to reject this request',
+        },
+        { status: 403 }
       )
     }
 
@@ -402,14 +497,13 @@ export const requestHandlers = [
     }
 
     // Update approval
-    const approverId = 'user-1' // TODO: Get from auth token
     db.requestApproval.update({
       where: { id: { equals: body.approval_id } },
       data: {
         status: 'Rejected',
         comment: body.reason,
         actioned_at: new Date().toISOString(),
-        actioned_by_id: approverId,
+        actioned_by_id: user.id,
       },
     })
 
@@ -427,7 +521,7 @@ export const requestHandlers = [
       id: `log-${id}-${Date.now()}`,
       request_id: id as string,
       action: 'reject',
-      user_id: approverId,
+      user_id: user.id,
       comment: body.reason,
       created_at: new Date().toISOString(),
     })
@@ -446,6 +540,18 @@ export const requestHandlers = [
 
   // POST /requests/:id/request-changes - Request changes
   http.post(`${API_BASE}/requests/:id/request-changes`, async ({ params, request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const { id } = params
     const body = await request.json() as RequestChangesRequest
 
@@ -463,6 +569,17 @@ export const requestHandlers = [
       )
     }
 
+    // Check if user can request changes (same as approve permission)
+    if (!canApproveRequest(user, req)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to request changes',
+        },
+        { status: 403 }
+      )
+    }
+
     // Update request status
     db.request.update({
       where: { id: { equals: id as string } },
@@ -473,12 +590,11 @@ export const requestHandlers = [
     })
 
     // Add log entry
-    const approverId = 'user-1' // TODO: Get from auth token
     db.requestLog.create({
       id: `log-${id}-${Date.now()}`,
       request_id: id as string,
       action: 'requestChange',
-      user_id: approverId,
+      user_id: user.id,
       comment: body.reason,
       created_at: new Date().toISOString(),
     })
@@ -497,6 +613,18 @@ export const requestHandlers = [
 
   // POST /requests/:id/complete - Complete a request (action taker)
   http.post(`${API_BASE}/requests/:id/complete`, async ({ params, request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const { id } = params
     const body = await request.json() as { comment?: string }
 
@@ -514,6 +642,17 @@ export const requestHandlers = [
       )
     }
 
+    // Check if user can complete this request
+    if (!canCompleteRequest(user, req)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to complete this request',
+        },
+        { status: 403 }
+      )
+    }
+
     // Update request status
     db.request.update({
       where: { id: { equals: id as string } },
@@ -524,12 +663,11 @@ export const requestHandlers = [
     })
 
     // Add log entry
-    const actorId = 'user-2' // TODO: Get from auth token
     db.requestLog.create({
       id: `log-${id}-${Date.now()}`,
       request_id: id as string,
       action: 'complete',
-      user_id: actorId,
+      user_id: user.id,
       comment: body.comment || null,
       created_at: new Date().toISOString(),
     })
@@ -548,6 +686,18 @@ export const requestHandlers = [
 
   // POST /requests/:id/comment - Add a comment
   http.post(`${API_BASE}/requests/:id/comment`, async ({ params, request }) => {
+    const user = getCurrentUser(request)
+
+    if (!user) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
     const { id } = params
     const body = await request.json() as { comment: string }
 
@@ -565,13 +715,23 @@ export const requestHandlers = [
       )
     }
 
+    // Check if user can view this request (required to comment)
+    if (!canViewRequest(user, req)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions to comment on this request',
+        },
+        { status: 403 }
+      )
+    }
+
     // Add log entry
-    const userId = 'user-1' // TODO: Get from auth token
     db.requestLog.create({
       id: `log-${id}-${Date.now()}`,
       request_id: id as string,
       action: 'comment',
-      user_id: userId,
+      user_id: user.id,
       comment: body.comment,
       created_at: new Date().toISOString(),
     })
