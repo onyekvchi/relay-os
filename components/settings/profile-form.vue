@@ -154,19 +154,15 @@ async function handleSave() {
   errorMessage.value = null
 
   try {
-    const { data, error } = await updateProfile({
+    const userDTO = await updateProfile({
       first_name: firstName.value,
       last_name: lastName.value,
       phone_number: phoneNumber.value,
     })
 
-    if (error.value) {
-      throw new Error(error.value.message || 'Failed to update profile')
-    }
-
-    if (data.value?.data) {
+    if (userDTO) {
       // Transform DTO to model and update store
-      const updatedUser = UserMapper.toModel(data.value.data)
+      const updatedUser = UserMapper.toModel(userDTO)
       authStore.setUser(updatedUser)
       
       successMessage.value = 'Profile updated successfully'

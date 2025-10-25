@@ -7,10 +7,12 @@ import { HttpMethod } from '~/types/api'
  * Composable for settings API operations
  */
 export function useSettingsApi() {
+  const { $api } = useNuxtApp()
+  
   /**
    * Get current user's profile
    */
-  const getProfile = async () => {
+  const getProfile = () => {
     return useApi<ApiResponse<UserDTO>>('/settings/profile', {
       method: HttpMethod.GET,
     })
@@ -19,18 +21,18 @@ export function useSettingsApi() {
   /**
    * Update current user's profile
    */
-  const updateProfile = async (data: UpdateProfileRequest) => {
-    return useApi<ApiResponse<UserDTO>>('/settings/profile', {
+  const updateProfile = (data: UpdateProfileRequest) => {
+    return $api<ApiResponse<UserDTO>>('/settings/profile', {
       method: HttpMethod.PATCH,
       body: data,
-    })
+    }).then(response => response.data!)
   }
 
   /**
    * Update password
    */
-  const updatePassword = async (data: UpdatePasswordRequest) => {
-    return useApi<ApiResponse<null>>('/settings/security', {
+  const updatePassword = (data: UpdatePasswordRequest) => {
+    return $api<ApiResponse<null>>('/settings/security', {
       method: HttpMethod.PATCH,
       body: data,
     })
@@ -39,7 +41,7 @@ export function useSettingsApi() {
   /**
    * Get team members (WorkspaceManager/Admin only)
    */
-  const getTeamMembers = async () => {
+  const getTeamMembers = () => {
     return useApi<ApiResponse<UserDTO[]>>('/settings/workspace/team', {
       method: HttpMethod.GET,
     })
@@ -48,23 +50,23 @@ export function useSettingsApi() {
   /**
    * Add team member (WorkspaceManager/Admin only)
    */
-  const addTeamMember = async (data: {
+  const addTeamMember = (data: {
     email: string
     first_name: string
     last_name: string
     role: string
   }) => {
-    return useApi<ApiResponse<UserDTO>>('/settings/workspace/team', {
+    return $api<ApiResponse<UserDTO>>('/settings/workspace/team', {
       method: HttpMethod.POST,
       body: data,
-    })
+    }).then(response => response.data!)
   }
 
   /**
    * Remove team member (Admin only)
    */
-  const removeTeamMember = async (userId: string) => {
-    return useApi<ApiResponse<null>>(`/settings/workspace/team/${userId}`, {
+  const removeTeamMember = (userId: string) => {
+    return $api<ApiResponse<null>>(`/settings/workspace/team/${userId}`, {
       method: HttpMethod.DELETE,
     })
   }
@@ -72,7 +74,7 @@ export function useSettingsApi() {
   /**
    * Get workspace settings
    */
-  const getWorkspace = async () => {
+  const getWorkspace = () => {
     return useApi<ApiResponse<{ name: string; logo?: string }>>('/settings/workspace', {
       method: HttpMethod.GET,
     })
@@ -81,11 +83,11 @@ export function useSettingsApi() {
   /**
    * Update workspace settings
    */
-  const updateWorkspace = async (data: { name: string; logo?: string }) => {
-    return useApi<ApiResponse<{ name: string; logo?: string }>>('/settings/workspace', {
+  const updateWorkspace = (data: { name: string; logo?: string }) => {
+    return $api<ApiResponse<{ name: string; logo?: string }>>('/settings/workspace', {
       method: HttpMethod.PATCH,
       body: data,
-    })
+    }).then(response => response.data!)
   }
 
   return {
