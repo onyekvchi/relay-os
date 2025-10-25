@@ -1,6 +1,6 @@
 import { beforeAll, afterEach, afterAll } from 'vitest'
 import { server } from '~/mocks/server'
-import { seedDatabase } from '~/mocks/db'
+import { seedDatabase, resetSeededFlag } from '~/mocks/db'
 
 // Establish API mocking before all tests
 beforeAll(() => {
@@ -12,7 +12,8 @@ beforeAll(() => {
 // so they don't affect other tests
 afterEach(() => {
   server.resetHandlers()
-  // Reseed database after each test
+  // Reset seeded flag and reseed database after each test
+  resetSeededFlag()
   seedDatabase()
 })
 

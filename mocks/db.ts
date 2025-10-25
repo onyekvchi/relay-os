@@ -1,5 +1,8 @@
 import { factory, primaryKey, nullable, oneOf, manyOf } from '@mswjs/data'
 
+// Track if database has been seeded to prevent data loss on hot reload
+let _isSeeded = false
+
 export const db = factory({
   // Auth & Users
   user: {
@@ -350,5 +353,23 @@ export function seedDatabase() {
     actioned_by_id: financeApprover.id,
   })
 
+  // Mark as seeded
+  _isSeeded = true
+  
   return { admin, workspaceManager, financeApprover, regularUser, pricingWorkflow, request1, request2 }
+}
+
+/**
+ * Check if database has been seeded
+ * Prevents data loss on hot module reload
+ */
+export function isSeeded(): boolean {
+  return _isSeeded
+}
+
+/**
+ * Reset the seeded flag (useful for tests)
+ */
+export function resetSeededFlag(): void {
+  _isSeeded = false
 }
