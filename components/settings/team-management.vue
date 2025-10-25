@@ -240,13 +240,9 @@ async function handleInviteMember() {
   errorMessage.value = null
   
   try {
-    const { data, error } = await addTeamMember(inviteForm.value)
+    const response = await addTeamMember(inviteForm.value)
     
-    if (error.value) {
-      throw new Error(error.value.message || 'Failed to invite team member')
-    }
-
-    if (data.value?.data) {
+    if (response) {
       successMessage.value = `Invitation sent to ${inviteForm.value.email}`
       showInviteModal.value = false
       
@@ -309,11 +305,7 @@ async function confirmRemoveMember() {
   isRemoving.value = true
   
   try {
-    const { error } = await removeTeamMember(selectedMember.value.id)
-    
-    if (error.value) {
-      throw new Error(error.value.message || 'Failed to remove team member')
-    }
+    await removeTeamMember(selectedMember.value.id)
 
     successMessage.value = `${selectedMember.value.name} has been removed from the team`
     showRemoveModal.value = false

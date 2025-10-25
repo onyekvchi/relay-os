@@ -171,16 +171,12 @@ async function handleSave() {
   errorMessage.value = null
 
   try {
-    const { data, error } = await updateWorkspace({
+    const workspaceData = await updateWorkspace({
       name: workspaceName.value,
       logo: workspaceLogo.value
     })
 
-    if (error.value) {
-      throw new Error(error.value.message || 'Failed to update workspace')
-    }
-
-    if (data.value?.data) {
+    if (workspaceData) {
       successMessage.value = 'Workspace updated successfully'
       originalName.value = workspaceName.value
       originalLogo.value = workspaceLogo.value

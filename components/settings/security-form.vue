@@ -221,16 +221,12 @@ async function handlePasswordChange() {
   errorMessage.value = null
 
   try {
-    const { data, error } = await updatePassword({
+    const response = await updatePassword({
       current_password: currentPassword.value,
       new_password: newPassword.value,
     })
 
-    if (error.value) {
-      throw new Error(error.value.message || 'Failed to update password')
-    }
-
-    if (data.value?.success) {
+    if (response?.success) {
       successMessage.value = 'Password updated successfully'
       
       // Clear form
