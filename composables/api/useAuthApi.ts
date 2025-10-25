@@ -8,9 +8,10 @@ import type {
 } from '~/types/auth';
 import { HttpMethod, type ApiResponse } from '~/types/api';
 
-
-export const useAuthApi = () => {
-
+/**
+ * Composable for authentication API operations
+ */
+export function useAuthApi() {
   const { $api } = useNuxtApp()
 
   const login = (request: LoginRequest) =>

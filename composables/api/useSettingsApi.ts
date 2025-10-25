@@ -1,13 +1,17 @@
 import type { UpdateProfileRequest, UpdatePasswordRequest, UserData } from '~/types/auth'
 import type { ApiResponse } from '~/types/api'
+import { HttpMethod } from '~/types/api'
 
-export const useSettingsApi = () => {
+/**
+ * Composable for settings API operations
+ */
+export function useSettingsApi() {
   /**
    * Get current user's profile
    */
   const getProfile = async () => {
     return useApi<ApiResponse<UserData>>('/settings/profile', {
-      method: 'GET',
+      method: HttpMethod.GET,
     })
   }
 
@@ -16,7 +20,7 @@ export const useSettingsApi = () => {
    */
   const updateProfile = async (data: UpdateProfileRequest) => {
     return useApi<ApiResponse<UserData>>('/settings/profile', {
-      method: 'PATCH',
+      method: HttpMethod.PATCH,
       body: data,
     })
   }
@@ -26,7 +30,7 @@ export const useSettingsApi = () => {
    */
   const updatePassword = async (data: UpdatePasswordRequest) => {
     return useApi<ApiResponse<null>>('/settings/security', {
-      method: 'PATCH',
+      method: HttpMethod.PATCH,
       body: data,
     })
   }
@@ -36,7 +40,7 @@ export const useSettingsApi = () => {
    */
   const getTeamMembers = async () => {
     return useApi<ApiResponse<UserData[]>>('/settings/workspace/team', {
-      method: 'GET',
+      method: HttpMethod.GET,
     })
   }
 
@@ -50,7 +54,7 @@ export const useSettingsApi = () => {
     role: string
   }) => {
     return useApi<ApiResponse<UserData>>('/settings/workspace/team', {
-      method: 'POST',
+      method: HttpMethod.POST,
       body: data,
     })
   }
@@ -60,7 +64,7 @@ export const useSettingsApi = () => {
    */
   const removeTeamMember = async (userId: string) => {
     return useApi<ApiResponse<null>>(`/settings/workspace/team/${userId}`, {
-      method: 'DELETE',
+      method: HttpMethod.DELETE,
     })
   }
 
@@ -69,7 +73,7 @@ export const useSettingsApi = () => {
    */
   const getWorkspace = async () => {
     return useApi<ApiResponse<{ name: string; logo?: string }>>('/settings/workspace', {
-      method: 'GET',
+      method: HttpMethod.GET,
     })
   }
 
@@ -78,7 +82,7 @@ export const useSettingsApi = () => {
    */
   const updateWorkspace = async (data: { name: string; logo?: string }) => {
     return useApi<ApiResponse<{ name: string; logo?: string }>>('/settings/workspace', {
-      method: 'PATCH',
+      method: HttpMethod.PATCH,
       body: data,
     })
   }
