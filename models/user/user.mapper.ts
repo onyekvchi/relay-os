@@ -14,7 +14,7 @@ export class UserMapper {
       firstName: dto.first_name,
       lastName: dto.last_name,
       email: dto.email,
-      phonenumber: dto.phone_number,
+      phoneNumber: dto.phone_number,
       role: dto.role as UserRole,
       createdAt: dto.created_at,
       updatedAt: dto.updated_at
@@ -29,7 +29,7 @@ export class UserMapper {
       first_name: user.firstName,
       last_name: user.lastName,
       email: user.email,
-      phone_number: user.phonenumber,
+      phone_number: user.phoneNumber,
       role: user.role
     }
   }
@@ -42,7 +42,7 @@ export class UserMapper {
     
     if (user.firstName !== undefined) dto.first_name = user.firstName
     if (user.lastName !== undefined) dto.last_name = user.lastName
-    if (user.phonenumber !== undefined) dto.phone_number = user.phonenumber
+    if (user.phoneNumber !== undefined) dto.phone_number = user.phoneNumber
     if (user.role !== undefined) dto.role = user.role
     
     return dto

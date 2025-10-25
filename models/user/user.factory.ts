@@ -6,7 +6,7 @@ export function mockUser(params: Partial<User> = {}): User {
     firstName: params.firstName ?? 'Pam',
     lastName: params.lastName ?? 'Beesly',
     email: params.email ?? 'p.beesly@relayos.com',
-    phonenumber: params.phonenumber ?? '+234 802 000 0002',
+    phoneNumber: params.phoneNumber ?? '+234 802 000 0002',
     role: params.role ?? UserRole.User,
     createdAt: params.createdAt ?? new Date().toISOString(),
     updatedAt: params.updatedAt ?? new Date().toISOString()

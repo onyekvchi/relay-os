@@ -103,7 +103,7 @@ const user = computed(() => authStore.getUser)
 // Form fields
 const firstName = ref(user.value?.firstName || '')
 const lastName = ref(user.value?.lastName || '')
-const phoneNumber = ref(user.value?.phonenumber || '')
+const phoneNumber = ref(user.value?.phoneNumber || '')
 const profilePicture = ref<string | undefined>(undefined)
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -126,7 +126,7 @@ const hasChanges = computed(() => {
   return (
     firstName.value !== user.value?.firstName ||
     lastName.value !== user.value?.lastName ||
-    phoneNumber.value !== user.value?.phonenumber
+    phoneNumber.value !== user.value?.phoneNumber
   )
 })
 

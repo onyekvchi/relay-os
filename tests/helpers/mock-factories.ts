@@ -6,7 +6,7 @@ export const createMockUser = (overrides: Partial<User> = {}): User => ({
   firstName: 'Test',
   lastName: 'User',
   email: 'test@example.com',
-  phonenumber: '+234 800 000 0000',
+  phoneNumber: '+234 800 000 0000',
   role: UserRole.User,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
