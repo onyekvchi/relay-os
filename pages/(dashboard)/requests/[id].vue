@@ -2,7 +2,9 @@
   <div class="space-y-8">
     <div class="mb-6 flex items-center justify-between h-10">
       <UBreadcrumb :items="[{ label: 'Requests', to: '/requests' }, { label: `Request #${requestId}` }]"></UBreadcrumb>
-      <div class="flex items-center gap-4">
+      
+      <!-- Approval Actions (for approvers, not initiators) -->
+      <div v-if="canApprove" class="flex items-center gap-4">
         <UButton 
           color="primary" 
           size="lg"
@@ -25,6 +27,25 @@
           @click="showRejectModal = true"
         >
           Reject
+        </UButton>
+      </div>
+
+      <!-- Edit/Cancel Actions (for initiators only) -->
+      <div v-else-if="canEdit" class="flex items-center gap-4">
+        <UButton 
+          color="primary" 
+          size="lg"
+          disabled
+        >
+          Edit Request
+        </UButton>
+        <UButton 
+          color="error" 
+          variant="outline" 
+          size="lg"
+          disabled
+        >
+          Cancel Request
         </UButton>
       </div>
     </div>
@@ -74,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { routes } from '@/routes'
 
 definePageMeta({
@@ -85,7 +106,26 @@ definePageMeta({
 const route = useRoute()
 const requestId = route.params.id as string
 
-const { approveRequest, rejectRequest, requestChanges } = useRequestsApi()
+const { getRequest, approveRequest, rejectRequest, requestChanges } = useRequestsApi()
+const { canApproveRequest, canEditRequest, currentUser } = usePermissions()
+
+// Fetch request data to check permissions
+const { data: request } = await getRequest(requestId)
+
+// Check if current user is the initiator
+const isInitiator = computed(() => {
+  return request.value?.initiator?.id === currentUser.value?.id
+})
+
+// Check if user can approve this specific request (not the initiator)
+const canApprove = computed(() => {
+  return request.value && canApproveRequest(request.value) && !isInitiator.value
+})
+
+// Check if user can edit/cancel this request (is the initiator)
+const canEdit = computed(() => {
+  return request.value && canEditRequest(request.value)
+})
 
 const approving = ref(false)
 const rejecting = ref(false)

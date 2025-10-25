@@ -2,7 +2,7 @@
   <div class="space-y-8">
     <div class="mb-6 flex items-center justify-between h-10">
       <UBreadcrumb :items="[{ label: 'Workflows', to: routes.workflows }, { label: workflowName }]"></UBreadcrumb>
-      <div class="flex items-center gap-4">
+      <div v-if="canManageWorkflows" class="flex items-center gap-4">
         <UButton 
           color="primary" 
           size="lg"
@@ -53,6 +53,8 @@ const workflowName = ref('Workflow')
 const isArchived = ref(false)
 const archiving = ref(false)
 const showArchiveModal = ref(false)
+
+const { canManageWorkflows } = usePermissions()
 
 function handleWorkflowLoaded(workflow: any) {
   workflowName.value = workflow.name
