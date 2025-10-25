@@ -21,7 +21,10 @@ export class DashboardMapper {
     }
   }
 
-  private static activityToModel(dto: ActivityLogDTO): ActivityLog {
+  /**
+   * Convert ActivityLogDTO to ActivityLog model
+   */
+  static activityToModel(dto: ActivityLogDTO): ActivityLog {
     return {
       id: dto.id,
       requestId: dto.request_id,
@@ -34,7 +37,10 @@ export class DashboardMapper {
     }
   }
 
-  private static mapAction(action: string): RequestAction {
+  /**
+   * Map action string from API to RequestAction enum
+   */
+  static mapAction(action: string): RequestAction {
     const actionMap: Record<string, RequestAction> = {
       'create': RequestAction.create,
       'approve': RequestAction.approve,

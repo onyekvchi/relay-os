@@ -52,16 +52,7 @@ export function useDashboardApi() {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<ActivityLogDTO[]>) => {
         if (!response?.data) return []
-        return response.data.map(a => ({
-          id: a.id,
-          requestId: a.request_id,
-          request: RequestMapper.toModel(a.request),
-          action: DashboardMapper['mapAction'](a.action),
-          userId: a.user_id,
-          user: a.user ? UserMapper.toModel(a.user) : {} as any,
-          comment: a.comment,
-          createdAt: a.created_at
-        }))
+        return response.data.map(a => DashboardMapper.activityToModel(a))
       },
     })
   }
