@@ -142,26 +142,6 @@ export const authHandlers = [
     })
   }),
 
-  // GET /auth/me - Get current authenticated user
-  http.get(`${API_BASE}/auth/me`, ({ request }) => {
-    const user = getCurrentUser(request)
-
-    if (!user) {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Unauthorized',
-        },
-        { status: 401 }
-      )
-    }
-
-    return HttpResponse.json({
-      success: true,
-      data: user
-    })
-  }),
-
   // POST /logout - Invalidate current token
   http.post(`${API_BASE}/logout`, ({ request }) => {
     const authHeader = request.headers.get('Authorization')

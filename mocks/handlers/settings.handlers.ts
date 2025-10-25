@@ -3,30 +3,27 @@ import { db } from '../db'
 import { getCurrentUser } from './auth.handlers'
 import { hasPermission, Permission, isAdmin, isWorkspaceManagerOrAdmin } from '../permissions'
 import type { UpdateProfileRequest, UpdatePasswordRequest } from '@/models/auth'
+import type { UserDTO } from '@/models/user/user.dto'
+
+/**
+ * Helper to build UserDTO
+ */
+function buildUserDTO(user: any): UserDTO {
+  return {
+    id: user.id,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    phone_number: user.phone_number,
+    role: user.role,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
+  }
+}
 
 const API_BASE = 'http://localhost:8000/api/v1'
 
 export const settingsHandlers = [
-  // GET /settings/profile - Get current user's profile
-  http.get(`${API_BASE}/settings/profile`, ({ request }) => {
-    const user = getCurrentUser(request)
-
-    if (!user) {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Unauthorized',
-        },
-        { status: 401 }
-      )
-    }
-
-    return HttpResponse.json({
-      success: true,
-      data: user
-    })
-  }),
-
   // PATCH /settings/profile - Update current user's profile
   http.patch(`${API_BASE}/settings/profile`, async ({ request }) => {
     const user = getCurrentUser(request)
@@ -68,10 +65,12 @@ export const settingsHandlers = [
       )
     }
 
+    const userDTO = buildUserDTO(updatedUser)
+
     return HttpResponse.json({
       success: true,
       message: 'Profile updated successfully',
-      data: updatedUser
+      data: userDTO
     })
   }),
 
@@ -141,10 +140,11 @@ export const settingsHandlers = [
     // All authenticated users can view team members
     // Get all users (in a real app, would filter by workspace)
     const teamMembers = db.user.findMany({})
+    const teamMemberDTOs = teamMembers.map(member => buildUserDTO(member))
 
     return HttpResponse.json({
       success: true,
-      data: teamMembers
+      data: teamMemberDTOs
     })
   }),
 
@@ -211,10 +211,12 @@ export const settingsHandlers = [
       updated_at: new Date().toISOString(),
     })
 
+    const newMemberDTO = buildUserDTO(newMember)
+
     return HttpResponse.json({
       success: true,
       message: 'Team member added successfully',
-      data: newMember
+      data: newMemberDTO
     })
   }),
 

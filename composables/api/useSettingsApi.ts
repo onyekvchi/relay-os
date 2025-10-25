@@ -10,15 +10,6 @@ export function useSettingsApi() {
   const { $api } = useNuxtApp()
   
   /**
-   * Get current user's profile
-   */
-  const getProfile = () => {
-    return useApi<ApiResponse<UserDTO>>('/settings/profile', {
-      method: HttpMethod.GET,
-    })
-  }
-
-  /**
    * Update current user's profile
    */
   const updateProfile = (data: UpdateProfileRequest) => {
@@ -91,7 +82,6 @@ export function useSettingsApi() {
   }
 
   return {
-    getProfile,
     updateProfile,
     updatePassword,
     getTeamMembers,
