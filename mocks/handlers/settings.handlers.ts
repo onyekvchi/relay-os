@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { db } from '../db'
 import { getCurrentUser } from './auth.handlers'
 import { hasPermission, Permission, isAdmin, isWorkspaceManagerOrAdmin } from '../permissions'
-import type { UpdateProfileRequest, UpdatePasswordRequest } from '~/types/auth'
+import type { UpdateProfileRequest, UpdatePasswordRequest } from '@/models/auth'
 
 const API_BASE = 'http://localhost:8000/api/v1'
 

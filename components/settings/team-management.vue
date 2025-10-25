@@ -143,7 +143,7 @@
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { UserMapper } from '@/models/user'
-import type { UserData } from '~/types/auth'
+import type { UserDTO } from '@/models/user/user.dto'
 
 const UAvatar = resolveComponent('UAvatar')
 const USelect = resolveComponent('USelect')
@@ -216,7 +216,7 @@ async function fetchTeamMembers() {
 
     if (data.value?.data) {
       // Transform DTOs to display format
-      teamMembers.value = data.value.data.map((userDTO: UserData) => {
+      teamMembers.value = data.value.data.map((userDTO: UserDTO) => {
         const user = UserMapper.toModel(userDTO)
         return {
           id: user.id,

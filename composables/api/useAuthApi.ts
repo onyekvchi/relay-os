@@ -5,8 +5,8 @@ import type {
   ResetPasswordRequest,
   LoginData,
   RegisterData
-} from '~/types/auth';
-import { HttpMethod, type ApiResponse } from '~/types/api';
+} from '@/models/auth'
+import { HttpMethod, type ApiResponse } from '~/types/api'
 
 /**
  * Composable for authentication API operations

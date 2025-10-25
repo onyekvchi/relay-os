@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { db } from '../db'
-import type { LoginRequest, RegisterRequest } from '~/types/auth'
+import type { LoginRequest, RegisterRequest } from '@/models/auth'
 
 const API_BASE = 'http://localhost:8000/api/v1'
 

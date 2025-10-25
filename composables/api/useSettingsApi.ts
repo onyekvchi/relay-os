@@ -1,4 +1,5 @@
-import type { UpdateProfileRequest, UpdatePasswordRequest, UserData } from '~/types/auth'
+import type { UpdateProfileRequest, UpdatePasswordRequest } from '@/models/auth'
+import type { UserDTO } from '@/models/user/user.dto'
 import type { ApiResponse } from '~/types/api'
 import { HttpMethod } from '~/types/api'
 
@@ -10,7 +11,7 @@ export function useSettingsApi() {
    * Get current user's profile
    */
   const getProfile = async () => {
-    return useApi<ApiResponse<UserData>>('/settings/profile', {
+    return useApi<ApiResponse<UserDTO>>('/settings/profile', {
       method: HttpMethod.GET,
     })
   }
@@ -19,7 +20,7 @@ export function useSettingsApi() {
    * Update current user's profile
    */
   const updateProfile = async (data: UpdateProfileRequest) => {
-    return useApi<ApiResponse<UserData>>('/settings/profile', {
+    return useApi<ApiResponse<UserDTO>>('/settings/profile', {
       method: HttpMethod.PATCH,
       body: data,
     })
@@ -39,7 +40,7 @@ export function useSettingsApi() {
    * Get team members (WorkspaceManager/Admin only)
    */
   const getTeamMembers = async () => {
-    return useApi<ApiResponse<UserData[]>>('/settings/workspace/team', {
+    return useApi<ApiResponse<UserDTO[]>>('/settings/workspace/team', {
       method: HttpMethod.GET,
     })
   }
@@ -53,7 +54,7 @@ export function useSettingsApi() {
     last_name: string
     role: string
   }) => {
-    return useApi<ApiResponse<UserData>>('/settings/workspace/team', {
+    return useApi<ApiResponse<UserDTO>>('/settings/workspace/team', {
       method: HttpMethod.POST,
       body: data,
     })
