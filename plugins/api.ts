@@ -30,11 +30,31 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
 
     async onResponseError({ response, request, options }) {
+      const toast = useToast()
+
       if (response.status === 401) {
         const { clearAuth } = useAuthStore()
         await nuxtApp.runWithContext(() => {
           clearAuth()
+          toast.add({
+            title: 'Session Expired',
+            description: 'Your session has expired. Please sign in again.',
+            color: 'error',
+          })
           navigateTo(routes.signIn)
+        })
+      }
+
+      if (response.status === 403) {
+        await nuxtApp.runWithContext(() => {
+          const payload = response?._data as any | undefined
+          const message = payload?.message || 'You do not have permission to perform this action.'
+          
+          toast.add({
+            title: 'Permission Denied',
+            description: message,
+            color: 'error',
+          })
         })
       }
 

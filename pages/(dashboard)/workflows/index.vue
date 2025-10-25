@@ -5,11 +5,13 @@ definePageMeta({
 });
 
 import { routes } from "@/routes"
+
+const { canManageWorkflows } = usePermissions()
 </script>
 
 <template>
   <PageHeader title="Workflows">
-    <UButton size="lg" label="New Workflow" :to="routes.newWorkflow" />
+    <UButton v-if="canManageWorkflows" size="lg" label="New Workflow" :to="routes.newWorkflow" />
   </PageHeader>
 
   <WorkflowsData />

@@ -31,8 +31,9 @@
             <label class="text-sm font-semibold">Logo</label>
             <p class="text-xs text-muted">Recommended size is 256x256px</p>
           </div>
-          <div class="relative group cursor-pointer">
+          <div class="relative group" :class="{ 'cursor-pointer': canUpdateWorkspace }">
             <input
+              v-if="canUpdateWorkspace"
               ref="logoInput"
               type="file"
               accept="image/*"
@@ -43,9 +44,10 @@
               :src="workspaceLogo" 
               :text="workspaceInitials" 
               size="lg"
-              @click="triggerLogoInput"
+              @click="canUpdateWorkspace ? triggerLogoInput() : undefined"
             />
             <div 
+              v-if="canUpdateWorkspace"
               class="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
               @click="triggerLogoInput"
             >
@@ -57,18 +59,20 @@
         <!-- Name -->
         <div class="flex items-center justify-between py-4 border-b border-muted">
           <label class="text-sm font-semibold">Name</label>
-          <UInput 
-            v-model="workspaceName" 
-            class="w-48"
-            placeholder="Workspace name"
+          <UInput
+            v-model="workspaceName"
+            placeholder="Enter workspace name"
+            class="w-full"
+            :disabled="!canUpdateWorkspace"
           />
         </div>
       </div>
 
       <!-- Save Button -->
       <div class="flex justify-end pt-2">
-        <UButton
-          :loading="isSaving"
+        <UButton 
+          v-if="canUpdateWorkspace"
+          :loading="isSaving" 
           :disabled="!hasChanges"
           @click="handleSave"
         >
@@ -77,8 +81,8 @@
       </div>
     </div>
 
-    <!-- Danger Zone Section -->
-    <div class="space-y-4">
+    <!-- Danger Zone Section (Admin only) -->
+    <div v-if="canUpdateWorkspace" class="space-y-4">
       <div>
         <h3 class="text-base font-semibold tracking-tight">Danger zone</h3>
       </div>
@@ -105,6 +109,7 @@
 
 <script setup lang="ts">
 const { getWorkspace, updateWorkspace } = useSettingsApi()
+const { canUpdateWorkspace } = usePermissions()
 
 // State
 const workspaceName = ref('')

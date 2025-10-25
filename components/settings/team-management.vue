@@ -19,7 +19,7 @@
     />
 
     <!-- Header with Invite Button -->
-    <div class="flex gap-4 items-center">
+    <div v-if="canAddTeamMembers" class="flex gap-4 items-center">
       <UButton @click="showInviteModal = true" color="primary">
         Invite team members
       </UButton>
@@ -154,6 +154,7 @@ const UDropdownMenu = resolveComponent('UDropdownMenu')
 const { getTeamMembers, addTeamMember, removeTeamMember } = useSettingsApi()
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.getUser)
+const { canAddTeamMembers, canRemoveTeamMembers, canUpdateUserRoles } = usePermissions()
 
 interface TeamMember {
   id: string
@@ -393,8 +394,6 @@ const roleOptions = [
 
 function getMemberActions(member: TeamMember) {
   const isCurrentUser = member.id === currentUser.value?.id
-  const isAdmin = currentUser.value?.role === 'Admin'
-  const canManage = isAdmin || currentUser.value?.role === 'Workspace Manager'
   
   const actions = []
   
@@ -409,8 +408,8 @@ function getMemberActions(member: TeamMember) {
     ])
   }
   
-  // Show edit role for admins/workspace managers (but not for themselves)
-  if (canManage && !isCurrentUser) {
+  // Show edit role if user has permission (but not for themselves)
+  if (canUpdateUserRoles.value && !isCurrentUser) {
     actions.push([
       {
         label: 'Change role',
@@ -420,8 +419,8 @@ function getMemberActions(member: TeamMember) {
     ])
   }
   
-  // Show remove for admins only (but not for themselves)
-  if (isAdmin && !isCurrentUser) {
+  // Show remove if user has permission (but not for themselves)
+  if (canRemoveTeamMembers.value && !isCurrentUser) {
     actions.push([
       {
         label: 'Remove member',

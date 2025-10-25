@@ -13,4 +13,11 @@ definePageMeta({
 });
 
 import { routes } from "@/routes"
+
+const { canManageWorkflows } = usePermissions()
+
+// Redirect if user doesn't have permission
+if (!canManageWorkflows.value) {
+  navigateTo(routes.workflows)
+}
 </script>
