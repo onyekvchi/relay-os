@@ -62,7 +62,7 @@
           <UInput
             v-model="workspaceName"
             placeholder="Enter workspace name"
-            class="w-full"
+            class="w-48"
             :disabled="!canUpdateWorkspace"
           />
         </div>
