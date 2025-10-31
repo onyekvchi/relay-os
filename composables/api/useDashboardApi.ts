@@ -15,12 +15,16 @@ import { HttpMethod } from '@/types/api'
  * Composable for dashboard API operations
  */
 export function useDashboardApi() {
-  /**
-   * Get popular workflows for dashboard
-   * Returns top 3 active workflows
-   */
+  const { getCurrentWorkspaceId } = useAuthStore()
+
+  const getDashboardSummary = () => {
+    return useApi<any>(`/workspaces/${getCurrentWorkspaceId}/dashboard/summary`, {
+      method: HttpMethod.GET,
+    })
+  }
+
   const getPopularWorkflows = () => {
-    return useApi<Workflow[]>('/dashboard/popular-workflows', {
+    return useApi<Workflow[]>(`/workspaces/${getCurrentWorkspaceId}/dashboard/popular`, {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<WorkflowDTO[]>) => {
         if (!response?.data) return []
@@ -29,27 +33,10 @@ export function useDashboardApi() {
     })
   }
 
-  /**
-   * Get pending actions for dashboard
-   * Returns requests awaiting current user's approval
-   */
-  const getPendingActions = () => {
-    return useApi<Request[]>('/dashboard/pending-actions', {
+  const getActivityFeed = (limit = 20) => {
+    return useApi<ActivityLog[]>(`/workspaces/${getCurrentWorkspaceId}/dashboard/activity`, {
       method: HttpMethod.GET,
-      transform: (response: ApiResponse<RequestDTO[]>) => {
-        if (!response?.data) return []
-        return RequestMapper.toModelList(response.data)
-      },
-    })
-  }
-
-  /**
-   * Get recent activity for dashboard
-   * Returns last 8 activity logs
-   */
-  const getRecentActivity = () => {
-    return useApi<ActivityLog[]>('/dashboard/recent-activity', {
-      method: HttpMethod.GET,
+      query: { limit },
       transform: (response: ApiResponse<ActivityLogDTO[]>) => {
         if (!response?.data) return []
         return response.data.map(a => DashboardMapper.activityToModel(a))
@@ -58,8 +45,8 @@ export function useDashboardApi() {
   }
 
   return {
+    getDashboardSummary,
     getPopularWorkflows,
-    getPendingActions,
-    getRecentActivity
+    getActivityFeed
   }
 }

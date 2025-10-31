@@ -72,6 +72,11 @@ export function useUsersApi() {
       body: { workspace_id: workspaceId }
     })
 
+  const getMyTasks = (filters?: { status?: string; workspace_id?: string }) =>
+    $api<ApiResponse<any[]>>('/users/me/tasks', {
+      query: filters
+    })
+
   return {
     getUsers,
     getUser,
@@ -79,5 +84,6 @@ export function useUsersApi() {
     updateUser,
     getUserWorkspaces,
     updateLastActiveWorkspace,
+    getMyTasks,
   }
 }

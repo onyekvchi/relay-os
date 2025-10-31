@@ -4,7 +4,8 @@ import type {
   CreateRequestRequest, 
   ApproveRequestRequest, 
   RejectRequestRequest, 
-  RequestChangesRequest 
+  RequestChangesRequest,
+  ExecuteRequestRequest
 } from '@/models/request/request.dto'
 import { RequestMapper } from '@/models/request/request.mapper'
 import type { ApiResponse } from '@/types/api'
@@ -15,12 +16,10 @@ import { HttpMethod } from '@/types/api'
  */
 export function useRequestsApi() {
   const { $api } = useNuxtApp()
-  /**
-   * Fetch all requests with optional filters
-   * @param filters - Optional filters (status, workflow_id)
-   */
+  const { getCurrentWorkspaceId } = useAuthStore()
+
   const getRequests = (filters?: { status?: string; workflow_id?: string }) => {
-    return useApi<Request[]>('/requests', {
+    return useApi<Request[]>(`/workspaces/${getCurrentWorkspaceId}/requests`, {
       query: filters,
       method: HttpMethod.GET,
       transform: (response: ApiResponse<RequestDTO[]>) => {
@@ -35,7 +34,7 @@ export function useRequestsApi() {
    * @param id - Request ID
    */
   const getRequest = (id: string) => {
-    return useApi<Request | null>(`/requests/${id}`, {
+    return useApi<Request | null>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}`, {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<RequestDTO>) => {
         if (!response?.data) return null
@@ -49,7 +48,7 @@ export function useRequestsApi() {
    * @param data - Request creation data
    */
   const createRequest = (data: CreateRequestRequest) => {
-    return $api<ApiResponse<RequestDTO>>('/requests', {
+    return $api<ApiResponse<RequestDTO>>(`/workspaces/${getCurrentWorkspaceId}/requests`, {
       method: HttpMethod.POST,
       body: data,
     }).then(response => RequestMapper.toModel(response.data!))
@@ -61,43 +60,35 @@ export function useRequestsApi() {
    * @param data - Approval data (approval_id, optional comment)
    */
   const approveRequest = (id: string, data: ApproveRequestRequest) => {
-    return $api<ApiResponse<RequestDTO>>(`/requests/${id}/approve`, {
+    return $api<ApiResponse<RequestDTO>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/approve`, {
       method: HttpMethod.POST,
       body: data,
     }).then(response => RequestMapper.toModel(response.data!))
   }
 
-  /**
-   * Reject a request
-   * @param id - Request ID
-   * @param data - Rejection data (approval_id, reason)
-   */
   const rejectRequest = (id: string, data: RejectRequestRequest) => {
-    return $api<ApiResponse<RequestDTO>>(`/requests/${id}/reject`, {
+    return $api<ApiResponse<RequestDTO>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/reject`, {
       method: HttpMethod.POST,
       body: data,
     }).then(response => RequestMapper.toModel(response.data!))
   }
 
-  /**
-   * Request changes on a request
-   * @param id - Request ID
-   * @param data - Request changes data (reason)
-   */
   const requestChanges = (id: string, data: RequestChangesRequest) => {
-    return $api<ApiResponse<RequestDTO>>(`/requests/${id}/request-changes`, {
+    return $api<ApiResponse<RequestDTO>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/request-changes`, {
       method: HttpMethod.POST,
       body: data,
     }).then(response => RequestMapper.toModel(response.data!))
   }
 
-  /**
-   * Complete a request (action taker)
-   * @param id - Request ID
-   * @param comment - Optional completion comment
-   */
-  const completeRequest = (id: string, comment?: string) => {
-    return $api<ApiResponse<RequestDTO>>(`/requests/${id}/complete`, {
+  const executeRequest = (id: string, data: ExecuteRequestRequest) => {
+    return $api<ApiResponse<RequestDTO>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/execute`, {
+      method: HttpMethod.POST,
+      body: data,
+    }).then(response => RequestMapper.toModel(response.data!))
+  }
+
+  const cancelRequest = (id: string, comment?: string) => {
+    return $api<ApiResponse<RequestDTO>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/cancel`, {
       method: HttpMethod.POST,
       body: { comment },
     }).then(response => RequestMapper.toModel(response.data!))
@@ -109,7 +100,7 @@ export function useRequestsApi() {
    * @param comment - Comment text
    */
   const addComment = (id: string, comment: string) => {
-    return $api<ApiResponse<RequestDTO>>(`/requests/${id}/comment`, {
+    return $api<ApiResponse<RequestDTO>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/comments`, {
       method: HttpMethod.POST,
       body: { comment },
     }).then(response => RequestMapper.toModel(response.data!))
@@ -122,7 +113,8 @@ export function useRequestsApi() {
     approveRequest,
     rejectRequest,
     requestChanges,
-    completeRequest,
+    executeRequest,
+    cancelRequest,
     addComment,
   }
 }
