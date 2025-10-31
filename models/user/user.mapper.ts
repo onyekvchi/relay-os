@@ -1,4 +1,4 @@
-import type { User, UserRole } from './user.model'
+import { UserRole, type User } from './user.model'
 import type { UserDTO, CreateUserRequest, UpdateUserRequest } from './user.dto'
 
 /**
@@ -15,7 +15,7 @@ export class UserMapper {
       lastName: dto.last_name,
       email: dto.email,
       phoneNumber: dto.phone_number,
-      role: dto.role as UserRole,
+      role: dto.role as UserRole || UserRole.Admin,
       lastActiveWorkspaceId: dto.last_active_workspace_id,
       twofaEnabled: dto.twofa_enabled,
       emailVerifiedAt: dto.email_verified_at,

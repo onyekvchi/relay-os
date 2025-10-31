@@ -51,7 +51,7 @@ export function usePermissions() {
    * Only Admin and Workspace Manager
    */
   const canManageWorkflows = computed(() => {
-    return isAdmin.value || isWorkspaceManagerOrAdmin.value
+    return isWorkspaceManagerOrAdmin.value
   })
 
   // ============================================
