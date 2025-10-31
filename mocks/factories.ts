@@ -94,7 +94,6 @@ export function createMockWorkflow(overrides?: Partial<{
     id: workflowId,
     name: overrides?.name || 'Test Workflow',
     description: overrides?.description || 'A test workflow',
-    is_archived: overrides?.is_archived || false,
     created_by_id: overrides?.created_by_id || 'user-1',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -113,27 +112,13 @@ export function createMockWorkflow(overrides?: Partial<{
       type: field.type,
       description: field.description,
       required: field.required,
-      order: index,
+      key: field.label.toLowerCase().replace(/\s+/g, '_'),
+      position: index,
+      options: null,
     })
   })
 
-  // Create approvals
-  const approverIds = overrides?.approver_ids || ['user-2']
-  approverIds.forEach((approverId, index) => {
-    db.workflowApproval.create({
-      id: `approval-${workflowId}-${index}`,
-      workflow_id: workflowId,
-      approver_id: approverId,
-      order: index,
-    })
-  })
-
-  // Create action
-  db.workflowAction.create({
-    id: `action-${workflowId}`,
-    workflow_id: workflowId,
-    actor_id: overrides?.actor_id || 'user-2',
-  })
+  // Step-based system uses workflow.steps instead of separate approvals/actions
 
   return workflow
 }

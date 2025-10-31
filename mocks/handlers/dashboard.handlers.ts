@@ -24,7 +24,7 @@ export const dashboardHandlers = [
 
     // Get top 3 active workflows
     const workflows = db.workflow.findMany({
-      where: { is_archived: { equals: false } }
+      where: { status: { equals: 'published' } }
     }).slice(0, 3)
 
     const popularWorkflows = workflows.map(w => buildWorkflowDTO(w))

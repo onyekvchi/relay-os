@@ -19,50 +19,29 @@ export function buildWorkflowDTO(workflow: any): WorkflowDTO {
   // Get fields
   const fields = db.workflowField.findMany({
     where: { workflow_id: { equals: workflow.id } },
-  }).sort((a, b) => a.order - b.order)
+  }).sort((a, b) => a.position - b.position)
 
-  // Get approvals with user details
-  const approvals = db.workflowApproval.findMany({
-    where: { workflow_id: { equals: workflow.id } },
-  }).sort((a, b) => a.order - b.order).map(approval => {
-    const approver = db.user.findFirst({
-      where: { id: { equals: approval.approver_id } },
-    })
-    return {
-      id: approval.id,
-      approver_id: approval.approver_id,
-      approver: approver as UserDTO,
-      order: approval.order,
-    }
-  })
-
-  // Get action with user details
-  const action = db.workflowAction.findFirst({
-    where: { workflow_id: { equals: workflow.id } },
-  })
-  const actor = action ? db.user.findFirst({
-    where: { id: { equals: action.actor_id } },
-  }) : null
+  // Step-based system doesn't use separate approval/action entities
 
   return {
     id: workflow.id,
     name: workflow.name,
+    workflow_key: workflow.workflow_key || 'default_key',
+    version: workflow.version || 1,
+    status: workflow.status || 'published',
+    start_key: workflow.start_key || 'start',
     description: workflow.description,
     fields: fields.map(f => ({
       id: f.id,
+      key: f.key || f.label.toLowerCase().replace(/\s+/g, '_'),
       label: f.label,
-      type: f.type,
+      type: f.type as any,
       description: f.description,
       required: f.required,
-      order: f.order,
-    })),
-    approvals,
-    action: {
-      id: action!.id,
-      actor_id: action!.actor_id,
-      actor: actor as UserDTO,
-    },
-    is_archived: workflow.is_archived,
+      position: f.position || 0,
+      options: f.options ? JSON.parse(f.options) : undefined
+    })) as any,
+    steps: workflow.steps || [],
     created_by: creator as UserDTO,
     created_at: workflow.created_at,
     updated_at: workflow.updated_at,
@@ -77,7 +56,7 @@ export const workflowHandlers = [
 
     const workflows = db.workflow.findMany({
       where: includeArchived ? {} : {
-        is_archived: { equals: false },
+        status: { equals: 'published' },
       },
     })
 
@@ -143,12 +122,12 @@ export const workflowHandlers = [
     const body = await request.json() as CreateWorkflowRequest
 
     // Validate required fields
-    if (!body.name || !body.fields || !body.approvals || !body.action_actor_id) {
+    if (!body.name || !body.workflow_key || !body.start_key || !body.fields || !body.steps) {
       return HttpResponse.json(
         {
           success: false,
           message: 'Missing required fields',
-          errors: ['name, fields, approvals, and action_actor_id are required'],
+          errors: ['name, workflow_key, start_key, fields, and steps are required'],
         },
         { status: 422 }
       )
@@ -159,8 +138,12 @@ export const workflowHandlers = [
     const workflow = db.workflow.create({
       id: workflowId,
       name: body.name,
+      workflow_key: body.workflow_key,
+      version: body.version || 1,
+      status: body.status || 'draft',
+      start_key: body.start_key,
       description: body.description || null,
-      is_archived: false,
+      steps: JSON.stringify(body.steps || []),
       created_by_id: user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -171,30 +154,17 @@ export const workflowHandlers = [
       db.workflowField.create({
         id: `field-${workflowId}-${index}`,
         workflow_id: workflowId,
+        key: field.key || field.label.toLowerCase().replace(/\s+/g, '_'),
         label: field.label,
         type: field.type,
         description: field.description,
         required: field.required,
-        order: field.order,
+        position: field.position || index,
+        options: field.options ? JSON.stringify(field.options) : null
       })
     })
 
-    // Create approvals with order information
-    body.approvals.forEach((approval, index) => {
-      db.workflowApproval.create({
-        id: `approval-${workflowId}-${index}`,
-        workflow_id: workflowId,
-        approver_id: approval.approver_id,
-        order: approval.order,
-      })
-    })
-
-    // Create action
-    db.workflowAction.create({
-      id: `action-${workflowId}`,
-      workflow_id: workflowId,
-      actor_id: body.action_actor_id,
-    })
+    // Steps are stored directly in the workflow object for the step-based system
 
     const workflowDTO = buildWorkflowDTO(workflow)
 
@@ -252,8 +222,12 @@ export const workflowHandlers = [
       where: { id: { equals: id as string } },
       data: {
         name: body.name || workflow.name,
+        workflow_key: body.workflow_key || workflow.workflow_key,
+        version: body.version || workflow.version,
+        status: body.status || workflow.status,
+        start_key: body.start_key || workflow.start_key,
         description: body.description !== undefined ? body.description : workflow.description,
-        is_archived: body.is_archived !== undefined ? body.is_archived : workflow.is_archived,
+        steps: body.steps !== undefined ? JSON.stringify(body.steps) : workflow.steps,
         updated_at: new Date().toISOString(),
       },
     })
@@ -270,40 +244,18 @@ export const workflowHandlers = [
         db.workflowField.create({
           id: `field-${id}-${Date.now()}-${index}`,
           workflow_id: id as string,
+          key: field.key || field.label.toLowerCase().replace(/\s+/g, '_'),
           label: field.label,
           type: field.type,
           description: field.description,
           required: field.required,
-          order: field.order,
+          position: field.position || index,
+          options: field.options ? JSON.stringify(field.options) : null
         })
       })
     }
 
-    // Update approvals if provided
-    if (body.approvals) {
-      // Delete existing approvals
-      db.workflowApproval.deleteMany({
-        where: { workflow_id: { equals: id as string } },
-      })
-
-      // Create new approvals with order information
-      body.approvals.forEach((approval, index) => {
-        db.workflowApproval.create({
-          id: `approval-${id}-${Date.now()}-${index}`,
-          workflow_id: id as string,
-          approver_id: approval.approver_id,
-          order: approval.order,
-        })
-      })
-    }
-
-    // Update action if provided
-    if (body.action_actor_id) {
-      db.workflowAction.update({
-        where: { workflow_id: { equals: id as string } },
-        data: { actor_id: body.action_actor_id },
-      })
-    }
+    // Steps are updated directly in the workflow object for the step-based system
 
     const workflowDTO = buildWorkflowDTO(updatedWorkflow!)
 
@@ -359,7 +311,7 @@ export const workflowHandlers = [
     db.workflow.update({
       where: { id: { equals: id as string } },
       data: {
-        is_archived: true,
+        status: 'archived',
         updated_at: new Date().toISOString(),
       },
     })

@@ -313,7 +313,7 @@ async function onSubmit() {
       fields: state.fields.map((field, index) => ({
         key: field.label.toLowerCase().replace(/\s+/g, '_'),
         label: field.label,
-        type: String(field.type),
+        type: field.type as any,
         description: field.description,
         required: true,
         position: index

@@ -28,8 +28,12 @@ export const db = factory({
   workflow: {
     id: primaryKey(String),
     name: String,
+    workflow_key: String,
+    version: Number,
+    status: String, // 'draft', 'published', 'archived'
+    start_key: String,
     description: nullable(String),
-    is_archived: Boolean,
+    steps: String, // JSON stringified array
     created_by_id: String,
     created_at: () => new Date().toISOString(),
     updated_at: () => new Date().toISOString(),
@@ -37,11 +41,13 @@ export const db = factory({
   workflowField: {
     id: primaryKey(String),
     workflow_id: String,
+    key: String,
     label: String,
-    type: String, // 'string', 'text', 'amount', 'integer', 'decimal', 'list', 'user', 'entity'
+    type: String, // 'short_text', 'long_text', 'currency', 'amount', 'select', 'multi_select', 'date', 'datetime', 'boolean', 'email', 'url'
     description: String,
     required: Boolean,
-    order: Number,
+    position: Number,
+    options: nullable(String), // JSON stringified array
   },
   workflowApproval: {
     id: primaryKey(String),
@@ -60,8 +66,9 @@ export const db = factory({
     id: primaryKey(String),
     workflow_id: String,
     initiator_id: String,
-    status: String, // 'Awaiting Approval', 'Changes Requested', 'Awaiting Action', 'Completed', 'Rejected', 'Cancelled'
-    field_values: String, // JSON stringified
+    status: String, // 'pending', 'completed', 'rejected', 'cancelled'
+    field_values: String, // JSON stringified (legacy for context)
+    active_steps: String, // JSON stringified array
     observer_ids: String, // JSON stringified array
     created_at: () => new Date().toISOString(),
     updated_at: () => new Date().toISOString(),
@@ -161,7 +168,11 @@ export function seedDatabase() {
     id: 'workflow-1',
     name: 'Pricing Change Request',
     description: 'Request to change customer pricing',
-    is_archived: false,
+    workflow_key: 'pricing_change',
+    version: 1,
+    status: 'published',
+    start_key: 'start',
+    steps: JSON.stringify([]),
     created_by_id: workspaceManager.id,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -172,10 +183,12 @@ export function seedDatabase() {
     id: 'field-1-1',
     workflow_id: pricingWorkflow.id,
     label: 'Merchant name',
-    type: 'string',
+    type: 'short_text',
     description: 'Whose pricing do you want to change?',
     required: true,
-    order: 0,
+    key: 'merchant_name',
+    position: 0,
+    options: null,
   })
 
   db.workflowField.create({
@@ -185,7 +198,9 @@ export function seedDatabase() {
     type: 'amount',
     description: 'How much were they paying before?',
     required: true,
-    order: 1,
+    key: 'old_price',
+    position: 1,
+    options: null,
   })
 
   db.workflowField.create({
@@ -195,40 +210,27 @@ export function seedDatabase() {
     type: 'amount',
     description: 'How much do we want to change it to?',
     required: true,
-    order: 2,
+    key: 'new_price',
+    position: 2,
+    options: null,
   })
 
   db.workflowField.create({
     id: 'field-1-4',
     workflow_id: pricingWorkflow.id,
     label: 'Reason for the change',
-    type: 'text',
+    type: 'long_text',
     description: 'How are we justifying this change?',
     required: true,
-    order: 3,
+    key: 'reason',
+    position: 3,
+    options: null,
   })
 
   // Add approvals
-  db.workflowApproval.create({
-    id: 'approval-1-1',
-    workflow_id: pricingWorkflow.id,
-    approver_id: admin.id,
-    order: 0,
-  })
+  // Approval system replaced by step-based workflow
 
-  db.workflowApproval.create({
-    id: 'approval-1-2',
-    workflow_id: pricingWorkflow.id,
-    approver_id: financeApprover.id,
-    order: 1,
-  })
 
-  // Add action
-  db.workflowAction.create({
-    id: 'action-1',
-    workflow_id: pricingWorkflow.id,
-    actor_id: workspaceManager.id,
-  })
 
   // Create sample requests
   const request1 = db.request.create({

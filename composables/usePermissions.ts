@@ -115,13 +115,13 @@ export function usePermissions() {
     // Users can see requests where they are assigned to active steps
     const hasActiveStepAssignment = request.activeSteps?.some(stepKey => {
       const step = request.workflow?.steps?.find(s => s.key === stepKey)
-      return step?.assignees?.includes(currentUser.value.id) || step?.assignee === currentUser.value.id
+      return step?.assignees?.includes(currentUser.value?.id || '') || step?.assignee === currentUser.value?.id
     })
     if (hasActiveStepAssignment) return true
 
     // Users can see requests where they are observers
     const isObserver = request.observers?.some(
-      observer => observer.id === currentUser.value!.id
+      observer => observer.id === currentUser.value?.id
     )
     if (isObserver) return true
 
@@ -167,7 +167,7 @@ export function usePermissions() {
     // Check if user is assigned to any active step
     return request.activeSteps?.some(stepKey => {
       const step = request.workflow?.steps?.find(s => s.key === stepKey)
-      return step?.assignees?.includes(currentUser.value.id) || step?.assignee === currentUser.value.id
+      return step?.assignees?.includes(currentUser.value?.id || '') || step?.assignee === currentUser.value?.id
     }) || false
   }
 

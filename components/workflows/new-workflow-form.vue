@@ -174,8 +174,9 @@
               <UFormField label="Assignees" :name="`step_${stepIndex}_assignees`" required>
                 <USelectMenu
                   v-model="step.assignees"
-                  :items="availableUsers"
-                  label-key="email"
+                  :items="availableUsers?.map(user => ({ label: `${user.firstName} ${user.lastName}`, value: user.id })) || []"
+                  label-key="label"
+                  value-key="value"
                   placeholder="Select assignees"
                   size="md"
                   multiple
@@ -183,7 +184,7 @@
                 />
               </UFormField>
               
-              <div v-if="step.assignees?.length > 0" class="flex flex-wrap gap-2 mt-2">
+              <div v-if="step.assignees?.length" class="flex flex-wrap gap-2 mt-2">
                 <UBadge v-for="assignee in step.assignees" :key="assignee" color="neutral" variant="outline" size="md">
                   {{ getUserById(assignee)?.firstName }} {{ getUserById(assignee)?.lastName }}
                 </UBadge>

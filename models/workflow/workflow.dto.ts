@@ -50,6 +50,8 @@ export interface BranchDTO {
 export interface CreateWorkflowRequest {
   name: string
   workflow_key: string
+  version?: number
+  status?: 'draft' | 'published' | 'archived'
   start_key: string
   description?: string
   fields: WorkflowFieldDTO[]
@@ -58,6 +60,9 @@ export interface CreateWorkflowRequest {
 
 export interface UpdateWorkflowRequest {
   name?: string
+  workflow_key?: string
+  version?: number
+  status?: 'draft' | 'published' | 'archived'
   start_key?: string
   description?: string
   fields?: WorkflowFieldDTO[]

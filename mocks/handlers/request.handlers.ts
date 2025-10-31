@@ -18,48 +18,29 @@ function buildWorkflowDTO(workflow: any): WorkflowDTO {
 
   const fields = db.workflowField.findMany({
     where: { workflow_id: { equals: workflow.id } },
-  }).sort((a, b) => a.order - b.order)
+  }).sort((a, b) => a.position - b.position)
 
-  const approvals = db.workflowApproval.findMany({
-    where: { workflow_id: { equals: workflow.id } },
-  }).sort((a, b) => a.order - b.order).map(approval => {
-    const approver = db.user.findFirst({
-      where: { id: { equals: approval.approver_id } },
-    })
-    return {
-      id: approval.id,
-      approver_id: approval.approver_id,
-      approver: approver as UserDTO,
-      order: approval.order,
-    }
-  })
-
-  const action = db.workflowAction.findFirst({
-    where: { workflow_id: { equals: workflow.id } },
-  })
-  const actor = action ? db.user.findFirst({
-    where: { id: { equals: action.actor_id } },
-  }) : null
+  // Step-based system doesn't use separate approval/action entities
 
   return {
     id: workflow.id,
     name: workflow.name,
+    workflow_key: workflow.workflow_key || 'default_key',
+    version: workflow.version || 1,
+    status: workflow.status || 'published',
+    start_key: workflow.start_key || 'start',
     description: workflow.description,
     fields: fields.map(f => ({
       id: f.id,
+      key: f.key || f.label.toLowerCase().replace(/\s+/g, '_'),
       label: f.label,
-      type: f.type,
+      type: f.type as any,
       description: f.description,
       required: f.required,
-      order: f.order,
-    })),
-    approvals,
-    action: {
-      id: action!.id,
-      actor_id: action!.actor_id,
-      actor: actor as UserDTO,
-    },
-    is_archived: workflow.is_archived,
+      position: f.position || 0,
+      options: f.options ? JSON.parse(f.options) : undefined
+    })) as any,
+    steps: workflow.steps || [],
     created_by: creator as UserDTO,
     created_at: workflow.created_at,
     updated_at: workflow.updated_at,
@@ -135,16 +116,12 @@ export function buildRequestDTO(request: any): RequestDTO {
     id: request.id,
     workflow_id: request.workflow_id,
     workflow: workflowDTO,
-    initiator_id: request.initiator_id,
-    initiator: initiator as UserDTO,
+    created_by: initiator as UserDTO,
     status: request.status,
-    field_values: JSON.parse(request.field_values),
-    observer_ids: observerIds,
-    observers,
+    context: JSON.parse(request.field_values || '{}'),
+    active_steps: JSON.parse(request.active_steps || '[]'),
     created_at: request.created_at,
     updated_at: request.updated_at,
-    logs,
-    approvals: requestApprovals,
   }
 }
 
@@ -256,12 +233,12 @@ export const requestHandlers = [
     const body = await request.json() as CreateRequestRequest
 
     // Validate required fields
-    if (!body.workflow_id || !body.field_values) {
+    if (!body.workflow_id || !body.context) {
       return HttpResponse.json(
         {
           success: false,
           message: 'Missing required fields',
-          errors: ['workflow_id and field_values are required'],
+          errors: ['workflow_id and context are required'],
         },
         { status: 422 }
       )
@@ -289,9 +266,10 @@ export const requestHandlers = [
       id: requestId,
       workflow_id: body.workflow_id,
       initiator_id: user.id,
-      status: 'Awaiting Approval',
-      field_values: JSON.stringify(body.field_values),
-      observer_ids: JSON.stringify(body.observer_ids || []),
+      status: 'pending',
+      field_values: JSON.stringify(body.context),
+      active_steps: JSON.stringify([workflow?.start_key || 'start']),
+      observer_ids: JSON.stringify(body.observers || []),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -374,29 +352,24 @@ export const requestHandlers = [
       )
     }
 
-    // Find the approval to update
-    const approval = db.requestApproval.findFirst({
-      where: { id: { equals: body.approval_id } },
-    })
-
-    if (!approval) {
+    // For step-based system, validate step_key instead of approval_id
+    if (!body.step_key) {
       return HttpResponse.json(
         {
           success: false,
-          message: 'Approval not found',
+          message: 'Missing step_key',
         },
-        { status: 404 }
+        { status: 422 }
       )
     }
 
-    // Update approval
-    db.requestApproval.update({
-      where: { id: { equals: body.approval_id } },
+    // Step-based approval logic would update request.active_steps
+    // For now, just update request status
+    db.request.update({
+      where: { id: { equals: id as string } },
       data: {
-        status: 'Approved',
-        comment: body.comment || null,
-        actioned_at: new Date().toISOString(),
-        actioned_by_id: user.id,
+        status: 'completed',
+        updated_at: new Date().toISOString(),
       },
     })
 
@@ -481,31 +454,18 @@ export const requestHandlers = [
       )
     }
 
-    // Find the approval to update
-    const approval = db.requestApproval.findFirst({
-      where: { id: { equals: body.approval_id } },
-    })
-
-    if (!approval) {
+    // For step-based system, validate step_key instead of approval_id
+    if (!body.step_key) {
       return HttpResponse.json(
         {
           success: false,
-          message: 'Approval not found',
+          message: 'Missing step_key',
         },
-        { status: 404 }
+        { status: 422 }
       )
     }
 
-    // Update approval
-    db.requestApproval.update({
-      where: { id: { equals: body.approval_id } },
-      data: {
-        status: 'Rejected',
-        comment: body.reason,
-        actioned_at: new Date().toISOString(),
-        actioned_by_id: user.id,
-      },
-    })
+    // Step-based rejection logic would update request.active_steps
 
     // Update request status
     db.request.update({
@@ -522,7 +482,7 @@ export const requestHandlers = [
       request_id: id as string,
       action: 'reject',
       user_id: user.id,
-      comment: body.reason,
+      comment: body.comment,
       created_at: new Date().toISOString(),
     })
 
@@ -595,7 +555,7 @@ export const requestHandlers = [
       request_id: id as string,
       action: 'requestChange',
       user_id: user.id,
-      comment: body.reason,
+      comment: body.comment,
       created_at: new Date().toISOString(),
     })
 
