@@ -80,7 +80,6 @@ describe('SigninForm', () => {
       expect(mockLogin).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123',
-        rememberMe: false,
       })
       
       expect(mockSetAuth).toHaveBeenCalledWith({

@@ -42,7 +42,7 @@ export function getCurrentUser(request: Request) {
 export const authHandlers = [
   // POST /login - Authenticate user
   http.post(`${API_BASE}/login`, async ({ request }) => {
-    const body = await request.json() as LoginRequest & { device_name?: string }
+    const body = await request.json() as LoginRequest
 
     const user = db.user.findFirst({
       where: {
@@ -85,7 +85,7 @@ export const authHandlers = [
 
   // POST /register - Create new user account
   http.post(`${API_BASE}/register`, async ({ request }) => {
-    const body = await request.json() as RegisterRequest & { device_name?: string }
+    const body = await request.json() as RegisterRequest
 
     // Check if user already exists
     const existingUser = db.user.findFirst({

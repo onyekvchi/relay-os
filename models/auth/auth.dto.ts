@@ -8,7 +8,6 @@ import type { UserDTO } from '../user/user.dto'
 export interface LoginRequest {
   email: string
   password: string
-  device_name: string
 }
 
 export interface RegisterRequest {
@@ -17,7 +16,6 @@ export interface RegisterRequest {
   email: string
   password: string
   password_confirmation: string
-  device_name: string
 }
 
 export interface ForgotPasswordRequest {

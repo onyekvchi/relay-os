@@ -44,7 +44,6 @@ const schema = LoginSchema
 const state = reactive<Partial<LoginFormFields>>({
   email: '',
   password: '',
-  rememberMe: false
 })
 
 async function onSubmit(event: FormSubmitEvent<LoginFormFields>) {
@@ -56,11 +55,7 @@ async function onSubmit(event: FormSubmitEvent<LoginFormFields>) {
   error.value = ''
 
   try {
-    const loginData = {
-      ...event.data,
-      device_name: `${navigator.userAgent.split(' ')[0]} Browser`
-    }
-    const response = await login(loginData)
+    const response = await login(event.data)
     if (response.data) {
       const { user: userDTO, access_token, refresh_token, expires_in } = response.data
       const user = UserMapper.toModel(userDTO)

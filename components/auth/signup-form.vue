@@ -92,12 +92,7 @@ async function onSubmit(event: FormSubmitEvent<RegisterFormFields>) {
   errorMessage.value = null
   
   try {
-    const payload = {
-      ...event.data,
-      device_name: `${navigator.userAgent.split(' ')[0]} Browser`
-    }
-    
-    const response = await register(payload)
+    const response = await register(event.data)
     const { setAuth } = useAuthStore()
     const { UserMapper } = await import('@/models/user')
     
