@@ -12,6 +12,7 @@ const authRoutes = {
 // App routes
 const appRoutes = {
   dashboard: "/dashboard",
+  workspaceOnboarding: "/onboarding/workspace",
   workflows: "/workflows",
   requests: "/requests",
   request(id: string): string {

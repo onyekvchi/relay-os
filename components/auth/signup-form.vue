@@ -106,7 +106,13 @@ async function onSubmit(event: FormSubmitEvent<RegisterFormFields>) {
       const { user: userDTO, access_token, refresh_token, expires_in } = response.data
       const user = UserMapper.toModel(userDTO)
       setAuth({ user, access_token, refresh_token, expires_in })
-      await navigateTo(routes.dashboard)
+      
+      // Redirect based on workspace status
+      if (user.lastActiveWorkspaceId) {
+        await navigateTo(routes.dashboard)
+      } else {
+        await navigateTo(routes.workspaceOnboarding)
+      }
     }
   } catch (error: any) {
     console.error('Registration error:', error)

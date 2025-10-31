@@ -33,6 +33,27 @@ export function useDashboardApi() {
     })
   }
 
+  const getPendingActions = () => {
+    return useApi<Request[]>(`/workspaces/${getCurrentWorkspaceId}/dashboard/pending-actions`, {
+      method: HttpMethod.GET,
+      transform: (response: ApiResponse<RequestDTO[]>) => {
+        if (!response?.data) return []
+        return RequestMapper.toModelList(response.data)
+      },
+    })
+  }
+
+  const getRecentActivity = (limit = 20) => {
+    return useApi<ActivityLog[]>(`/workspaces/${getCurrentWorkspaceId}/dashboard/activity`, {
+      method: HttpMethod.GET,
+      query: { limit },
+      transform: (response: ApiResponse<ActivityLogDTO[]>) => {
+        if (!response?.data) return []
+        return response.data.map(a => DashboardMapper.activityToModel(a))
+      },
+    })
+  }
+
   const getActivityFeed = (limit = 20) => {
     return useApi<ActivityLog[]>(`/workspaces/${getCurrentWorkspaceId}/dashboard/activity`, {
       method: HttpMethod.GET,
@@ -47,6 +68,8 @@ export function useDashboardApi() {
   return {
     getDashboardSummary,
     getPopularWorkflows,
+    getPendingActions,
+    getRecentActivity,
     getActivityFeed
   }
 }

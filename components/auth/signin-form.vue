@@ -65,8 +65,14 @@ async function onSubmit(event: FormSubmitEvent<LoginFormFields>) {
       const { user: userDTO, access_token, refresh_token, expires_in } = response.data
       const user = UserMapper.toModel(userDTO)
       setAuth({ user, access_token, refresh_token, expires_in })
+      
+      // Redirect based on workspace status
+      if (user.lastActiveWorkspaceId) {
+        await navigateTo(routes.dashboard)
+      } else {
+        await navigateTo(routes.workspaceOnboarding)
+      }
     }
-    await navigateTo(routes.dashboard)
   } catch (err: any) {
     error.value = err.message || 'Login failed. Please try again'
   } finally {

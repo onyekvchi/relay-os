@@ -12,7 +12,7 @@
               </h4>
               <p class="text-sm text-muted">
                 {{ workflow.fields.length }} field{{ workflow.fields.length !== 1 ? 's' : '' }} ·
-                {{ workflow.approvals.length }} approval{{ workflow.approvals.length !== 1 ? 's' : '' }}
+                {{ workflow.steps.length }} step{{ workflow.steps.length !== 1 ? 's' : '' }}
               </p>
             </div>
             <div class="text-muted group-hover:text-primary transition-colors">
@@ -47,11 +47,11 @@
           class="p-4 hover:bg-elevated transition-colors cursor-pointer flex items-center justify-between"
           @click="navigateTo(routes.request(action.id))">
           <div class="flex items-center space-x-3 flex-1">
-            <UAvatar :text="action.initiator.firstName[0] + action.initiator.lastName[0]" size="md" />
+            <UAvatar :text="action.createdBy.firstName[0] + action.createdBy.lastName[0]" size="md" />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold">
-                {{ action.initiator.firstName }} {{ action.initiator.lastName }} created a
-                <span class="text-muted">{{ action.type.name }}</span>
+                {{ action.createdBy.firstName }} {{ action.createdBy.lastName }} created a
+                <span class="text-muted">{{ action.workflow.name }}</span>
                 for your approval
               </p>
             </div>
@@ -82,7 +82,7 @@
               <p class="text-sm leading-relaxed">
                 <span class="font-semibold">{{ activity.user.firstName }} {{ activity.user.lastName }}</span>
                 <span class="text-muted ml-1">{{ getActionText(activity.action) }}</span>
-                <span class="font-semibold ml-1">{{ activity.request.type.name }}</span>
+                <span class="font-semibold ml-1">{{ activity.request.workflow.name }}</span>
                 <span class="text-muted ml-1">· {{ formatTimeAgo(activity.createdAt) }}</span>
               </p>
             </div>
