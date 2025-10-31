@@ -15,6 +15,11 @@ export const useAuthStore = defineStore('authStore', () => {
   const getUser = computed(() => user.value);
   const getToken = computed(() => token.value);
   const getUserId = computed(() => user.value?.id);
+  const getCurrentWorkspaceId = computed(() => {
+    const workspaceId = user.value?.last_active_workspace_id
+    if (!workspaceId) throw new Error('No active workspace')
+    return workspaceId
+  });
   
   function setUser(newUser: User) {
     user.value = newUser;
@@ -60,6 +65,7 @@ export const useAuthStore = defineStore('authStore', () => {
     getUser,
     getToken,
     getUserId,
+    getCurrentWorkspaceId,
     
     // Actions
     setUser,

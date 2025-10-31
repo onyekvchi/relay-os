@@ -9,12 +9,10 @@ import { HttpMethod } from '@/types/api'
  */
 export function useWorkflowsApi() {
   const { $api } = useNuxtApp()
-  /**
-   * Fetch all workflows
-   * @param includeArchived - Whether to include archived workflows
-   */
+  const { getCurrentWorkspaceId } = useAuthStore()
+
   const getWorkflows = (includeArchived = false) => {
-    return useApi<Workflow[]>('/workflows', {
+    return useApi<Workflow[]>(`/workspaces/${getCurrentWorkspaceId}/workflows`, {
       query: { includeArchived },
       method: HttpMethod.GET,
       transform: (response: ApiResponse<WorkflowDTO[]>) => {
@@ -29,7 +27,7 @@ export function useWorkflowsApi() {
    * @param id - Workflow ID
    */
   const getWorkflow = (id: string) => {
-    return useApi<Workflow | null>(`/workflows/${id}`, {
+    return useApi<Workflow | null>(`/workspaces/${getCurrentWorkspaceId}/workflows/${id}`, {
       method: HttpMethod.GET,
       transform: (response: ApiResponse<WorkflowDTO>) => {
         if (!response?.data) return null
@@ -43,7 +41,7 @@ export function useWorkflowsApi() {
    * @param data - Workflow creation data
    */
   const createWorkflow = (data: CreateWorkflowRequest) => {
-    return $api<ApiResponse<WorkflowDTO>>('/workflows', {
+    return $api<ApiResponse<WorkflowDTO>>(`/workspaces/${getCurrentWorkspaceId}/workflows`, {
       method: HttpMethod.POST,
       body: data,
     }).then(response => WorkflowMapper.toModel(response.data!))
@@ -55,20 +53,22 @@ export function useWorkflowsApi() {
    * @param data - Workflow update data
    */
   const updateWorkflow = (id: string, data: UpdateWorkflowRequest) => {
-    return $api<ApiResponse<WorkflowDTO>>(`/workflows/${id}`, {
-      method: HttpMethod.PUT,
+    return $api<ApiResponse<WorkflowDTO>>(`/workspaces/${getCurrentWorkspaceId}/workflows/${id}`, {
+      method: HttpMethod.PATCH,
       body: data,
     }).then(response => WorkflowMapper.toModel(response.data!))
   }
 
-  /**
-   * Archive a workflow (soft delete)
-   * @param id - Workflow ID
-   */
+  const publishWorkflow = (id: string) => {
+    return $api<ApiResponse<WorkflowDTO>>(`/workspaces/${getCurrentWorkspaceId}/workflows/${id}/publish`, {
+      method: HttpMethod.POST,
+    }).then(response => WorkflowMapper.toModel(response.data!))
+  }
+
   const archiveWorkflow = (id: string) => {
-    return $api<ApiResponse>(`/workflows/${id}`, {
-      method: HttpMethod.DELETE,
-    })
+    return $api<ApiResponse<WorkflowDTO>>(`/workspaces/${getCurrentWorkspaceId}/workflows/${id}/archive`, {
+      method: HttpMethod.POST,
+    }).then(response => WorkflowMapper.toModel(response.data!))
   }
 
   return {
@@ -76,6 +76,7 @@ export function useWorkflowsApi() {
     getWorkflow,
     createWorkflow,
     updateWorkflow,
+    publishWorkflow,
     archiveWorkflow,
   }
 }

@@ -8,6 +8,7 @@ import { HttpMethod, type ApiResponse } from '~/types/api'
 
 export function useWorkspaceApi() {
   const { $api } = useNuxtApp()
+  const { getCurrentWorkspaceId } = useAuthStore()
 
   const createWorkspace = (request: CreateWorkspaceRequest) =>
     $api<ApiResponse<WorkspaceDTO>>('/workspaces', {
@@ -15,22 +16,22 @@ export function useWorkspaceApi() {
       body: request
     })
 
-  const getWorkspace = (workspaceId: string) =>
-    $api<ApiResponse<WorkspaceDTO>>(`/workspaces/${workspaceId}`)
+  const getCurrentWorkspace = () =>
+    $api<ApiResponse<WorkspaceDTO>>(`/workspaces/${getCurrentWorkspaceId}`)
 
-  const updateWorkspace = (workspaceId: string, request: UpdateWorkspaceRequest) =>
-    $api<ApiResponse<WorkspaceDTO>>(`/workspaces/${workspaceId}`, {
+  const updateCurrentWorkspace = (request: UpdateWorkspaceRequest) =>
+    $api<ApiResponse<WorkspaceDTO>>(`/workspaces/${getCurrentWorkspaceId}`, {
       method: HttpMethod.PATCH,
       body: request
     })
 
-  const getWorkspaceMembers = (workspaceId: string) =>
-    $api<ApiResponse<WorkspaceMemberDTO[]>>(`/workspaces/${workspaceId}/members`)
+  const getCurrentWorkspaceMembers = () =>
+    $api<ApiResponse<WorkspaceMemberDTO[]>>(`/workspaces/${getCurrentWorkspaceId}/members`)
 
   return {
     createWorkspace,
-    getWorkspace,
-    updateWorkspace,
-    getWorkspaceMembers
+    getCurrentWorkspace,
+    updateCurrentWorkspace,
+    getCurrentWorkspaceMembers
   }
 }
