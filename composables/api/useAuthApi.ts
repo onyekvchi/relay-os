@@ -3,8 +3,10 @@ import type {
   RegisterRequest, 
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  RefreshTokenRequest,
   LoginData,
-  RegisterData
+  RegisterData,
+  RefreshTokenData
 } from '@/models/auth'
 import { HttpMethod, type ApiResponse } from '~/types/api'
 
@@ -49,12 +51,19 @@ export function useAuthApi() {
         body: request
       })
 
+  const refreshToken = (request: RefreshTokenRequest) =>
+      $api<ApiResponse<RefreshTokenData>>('/auth/refresh', {
+        method: HttpMethod.POST,
+        body: request
+      })
+
   return {
     login,
     register,
     forgotPassword,
     resetPassword,
     verifyEmail,
-    resendVerification
+    resendVerification,
+    refreshToken
   }
 }

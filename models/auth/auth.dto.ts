@@ -41,11 +41,27 @@ export interface UpdatePasswordRequest {
 }
 
 export interface LoginData {
-  token: string
+  access_token: string
+  refresh_token: string
+  token_type: string
+  expires_in: number
   user: UserDTO
 }
 
 export interface RegisterData {
-  token: string
+  access_token: string
+  refresh_token: string
+  token_type: string
+  expires_in: number
   user: UserDTO
+}
+
+export interface RefreshTokenRequest {
+  refresh_token: string
+}
+
+export interface RefreshTokenData {
+  access_token: string
+  token_type: string
+  expires_in: number
 }

@@ -10,21 +10,30 @@ export enum HttpMethod {
   TRACE = 'TRACE',
 }
 
-// Generic API Response
 export interface ApiResponse<T = any> {
   success: boolean
   message: string
   data?: T
-  errors?: string[]
-  meta?: {
-    total?: number
-    page?: number
-    perPage?: number
-    lastPage?: number
-  }
 }
 
-// Error type used by API plugin
+export interface Pagination {
+  page: number
+  limit: number
+  total: number
+  total_pages: number
+}
+
+export interface ErrorResponse {
+  type: string
+  title: string
+  status: number
+  detail: string
+  errors?: Array<{
+    field: string
+    message: string
+  }>
+}
+
 export interface ApiError extends Error {
   status: number
   code?: string
