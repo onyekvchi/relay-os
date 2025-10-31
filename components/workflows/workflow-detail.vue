@@ -75,29 +75,6 @@
       <!-- Right Column: Usage Stats -->
       <div class="w-1/3 space-y-4">
         <div class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold tracking-tight">Usage Statistics</h2>
-          <div class="space-y-3">
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-muted">Total Requests</span>
-              <span class="text-lg font-semibold">{{ usageStats.totalRequests }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-muted">Pending</span>
-              <span class="text-lg font-semibold">{{ usageStats.pendingRequests }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-muted">Completed</span>
-              <span class="text-lg font-semibold">{{ usageStats.completedRequests }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm text-muted">Avg. Approval Time</span>
-              <span class="text-lg font-semibold">{{ usageStats.avgApprovalTime }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Metadata -->
-        <div class="bg-white border border-muted p-4 space-y-4">
           <h2 class="text-lg font-semibold tracking-tight">Metadata</h2>
           <div class="space-y-2 text-sm">
             <div class="flex flex-col space-y-1">
@@ -156,14 +133,6 @@ const users = ref<User[]>([])
 function getUserById(id: string): User | undefined {
   return users.value.find(user => user.id === id)
 }
-
-// Sample usage statistics - TODO: fetch from API when endpoint is available
-const usageStats = ref({
-  totalRequests: 47,
-  pendingRequests: 8,
-  completedRequests: 35,
-  avgApprovalTime: '2.3 days'
-})
 
 // Emit workflow data when loaded
 watch(workflow, (newWorkflow) => {
