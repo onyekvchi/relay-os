@@ -28,10 +28,30 @@ export function useWorkspaceApi() {
   const getCurrentWorkspaceMembers = () =>
     $api<ApiResponse<WorkspaceMemberDTO[]>>(`/workspaces/${getCurrentWorkspaceId}/members`)
 
+  const inviteWorkspaceMember = (request: { email: string; first_name: string; last_name: string; role: string; job_role?: string }) =>
+    $api<ApiResponse<any>>(`/workspaces/${getCurrentWorkspaceId}/members/invite`, {
+      method: HttpMethod.POST,
+      body: request
+    })
+
+  const updateWorkspaceMember = (userId: string, request: { role?: string; status?: string; job_role?: string }) =>
+    $api<ApiResponse<WorkspaceMemberDTO>>(`/workspaces/${getCurrentWorkspaceId}/members/${userId}`, {
+      method: HttpMethod.PATCH,
+      body: request
+    })
+
+  const removeWorkspaceMember = (userId: string) =>
+    $api<ApiResponse<null>>(`/workspaces/${getCurrentWorkspaceId}/members/${userId}`, {
+      method: HttpMethod.DELETE
+    })
+
   return {
     createWorkspace,
     getCurrentWorkspace,
     updateCurrentWorkspace,
-    getCurrentWorkspaceMembers
+    getCurrentWorkspaceMembers,
+    inviteWorkspaceMember,
+    updateWorkspaceMember,
+    removeWorkspaceMember
   }
 }

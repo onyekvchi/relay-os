@@ -71,6 +71,22 @@ export function useWorkflowsApi() {
     }).then(response => WorkflowMapper.toModel(response.data!))
   }
 
+  const cloneWorkflow = (id: string, baseOnVersion?: number) => {
+    return $api<ApiResponse<WorkflowDTO>>(`/workspaces/${getCurrentWorkspaceId}/workflows/${id}/clone`, {
+      method: HttpMethod.POST,
+      body: baseOnVersion ? { base_on_version: baseOnVersion } : {}
+    }).then(response => WorkflowMapper.toModel(response.data!))
+  }
+
+  const getWorkflowVersions = (id: string) => {
+    return $api<ApiResponse<any>>(`/workspaces/${getCurrentWorkspaceId}/workflows/${id}/versions`)
+  }
+
+  const getWorkflowVersion = (id: string, version: number) => {
+    return $api<ApiResponse<WorkflowDTO>>(`/workspaces/${getCurrentWorkspaceId}/workflows/${id}/versions/${version}`)
+      .then(response => WorkflowMapper.toModel(response.data!))
+  }
+
   return {
     getWorkflows,
     getWorkflow,
@@ -78,5 +94,8 @@ export function useWorkflowsApi() {
     updateWorkflow,
     publishWorkflow,
     archiveWorkflow,
+    cloneWorkflow,
+    getWorkflowVersions,
+    getWorkflowVersion,
   }
 }

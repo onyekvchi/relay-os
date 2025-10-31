@@ -57,6 +57,41 @@ export function useAuthApi() {
         body: request
       })
 
+  const enable2FA = () =>
+      $api<ApiResponse<any>>('/auth/2fa/enable', {
+        method: HttpMethod.POST
+      })
+
+  const verify2FA = (request: { email: string; code: string }) =>
+      $api<ApiResponse<any>>('/auth/2fa/verify', {
+        method: HttpMethod.POST,
+        body: request
+      })
+
+  const changePassword = (request: { current_password: string; new_password: string }) =>
+      $api<ApiResponse<null>>('/auth/change-password', {
+        method: HttpMethod.POST,
+        body: request
+      })
+
+  const getSessions = () =>
+      $api<ApiResponse<any[]>>('/auth/sessions')
+
+  const revokeSession = (sessionId: string) =>
+      $api<ApiResponse<null>>(`/auth/sessions/${sessionId}`, {
+        method: HttpMethod.DELETE
+      })
+
+  const logoutAllSessions = () =>
+      $api<ApiResponse<null>>('/auth/sessions/logout-all', {
+        method: HttpMethod.POST
+      })
+
+  const logout = () =>
+      $api<ApiResponse<null>>('/auth/logout', {
+        method: HttpMethod.POST
+      })
+
   return {
     login,
     register,
@@ -64,6 +99,13 @@ export function useAuthApi() {
     resetPassword,
     verifyEmail,
     resendVerification,
-    refreshToken
+    refreshToken,
+    enable2FA,
+    verify2FA,
+    changePassword,
+    getSessions,
+    revokeSession,
+    logoutAllSessions,
+    logout
   }
 }
