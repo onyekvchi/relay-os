@@ -2,7 +2,7 @@ import { HttpMethod, type ApiResponse } from '~/types/api'
 
 export function useAuditApi() {
   const { $api } = useNuxtApp()
-  const { getCurrentWorkspaceId } = useAuthStore()
+  const authStore = useAuthStore()
 
   const getAuditEvents = (filters?: { 
     event_type?: string; 
@@ -11,7 +11,7 @@ export function useAuditApi() {
     page?: number;
     limit?: number;
   }) =>
-    $api<ApiResponse<any[]>>(`/workspaces/${getCurrentWorkspaceId}/audit/events`, {
+    $api<ApiResponse<any[]>>(`/workspaces/${authStore.getCurrentWorkspaceId}/audit/events`, {
       query: filters
     })
 

@@ -50,11 +50,11 @@
           <UForm :schema="schema" :state="state" @submit="createWorkspace">
             <div class="space-y-4">
               <UFormField label="Workspace Name" name="name" required>
-                <UInput v-model="state.name" placeholder="Enter workspace name" />
+                <UInput v-model="state.name" placeholder="Enter workspace name" class="w-full" />
               </UFormField>
               
               <UFormField label="Workspace URL" name="url" required>
-                <UInput v-model="state.url" placeholder="my-company" />
+                <UInput v-model="state.url" placeholder="my-company" class="w-full" />
                 <template #help>
                   This will be used in your workspace URL
                 </template>
