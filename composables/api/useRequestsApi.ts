@@ -95,15 +95,60 @@ export function useRequestsApi() {
   }
 
   /**
+   * Get comments for a request
+   * @param id - Request ID
+   */
+  const getComments = (id: string) => {
+    return $api<ApiResponse<any[]>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/comments`, {
+      method: HttpMethod.GET,
+    })
+  }
+
+  /**
    * Add a comment to a request
    * @param id - Request ID
    * @param comment - Comment text
+   * @param step_key - Optional step context for the comment
    */
-  const addComment = (id: string, comment: string) => {
+  const addComment = (id: string, comment: string, step_key?: string) => {
     return $api<ApiResponse<RequestDTO>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/comments`, {
       method: HttpMethod.POST,
-      body: { comment },
+      body: { comment, step_key },
     }).then(response => RequestMapper.toModel(response.data!))
+  }
+
+  /**
+   * Update request context
+   * @param id - Request ID
+   * @param context_updates - Context fields to update
+   */
+  const updateContext = (id: string, context_updates: Record<string, any>) => {
+    return $api<ApiResponse<{ context: Record<string, any> }>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/context`, {
+      method: HttpMethod.PATCH,
+      body: context_updates,
+    })
+  }
+
+  /**
+   * Preview next steps for a request
+   * @param id - Request ID
+   */
+  const previewNextSteps = (id: string) => {
+    return $api<ApiResponse<{ next_steps: any[] }>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/next-steps`, {
+      method: HttpMethod.GET,
+    })
+  }
+
+  /**
+   * Manage observers for a request
+   * @param id - Request ID
+   * @param data - Observers to add/remove
+   */
+  const manageObservers = (id: string, data: { add?: string[]; remove?: string[] }) => {
+    return $api<ApiResponse<{ observers: any[] }>>(`/workspaces/${getCurrentWorkspaceId}/requests/${id}/observers`, {
+      method: HttpMethod.POST,
+      body: data,
+    })
   }
 
   return {
@@ -115,6 +160,10 @@ export function useRequestsApi() {
     requestChanges,
     executeRequest,
     cancelRequest,
+    getComments,
     addComment,
+    updateContext,
+    previewNextSteps,
+    manageObservers,
   }
 }

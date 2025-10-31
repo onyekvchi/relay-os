@@ -10,9 +10,9 @@ export interface UserDTO {
   email: string
   phone_number?: string
   role?: string
-  last_active_workspace_id?: string
+  last_active_workspace_id?: string | null
   twofa_enabled?: boolean
-  email_verified_at?: string
+  email_verified_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -30,4 +30,8 @@ export interface UpdateUserRequest {
   last_name?: string
   phone_number?: string
   role?: string
+  last_active_workspace_id?: string
+  preferences?: {
+    email_notifications?: boolean
+  }
 }

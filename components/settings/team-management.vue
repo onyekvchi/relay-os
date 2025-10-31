@@ -151,7 +151,7 @@ const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 
-const { getTeamMembers, addTeamMember, removeTeamMember } = useSettingsApi()
+const { getCurrentWorkspaceMembers, inviteWorkspaceMember, removeWorkspaceMember } = useWorkspaceApi()
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.getUser)
 const { canAddTeamMembers, canRemoveTeamMembers, canUpdateUserRoles } = usePermissions()
@@ -208,23 +208,18 @@ async function fetchTeamMembers() {
   errorMessage.value = null
   
   try {
-    const { data, error } = await getTeamMembers()
+    const response = await getCurrentWorkspaceMembers()
     
-    if (error.value) {
-      throw new Error(error.value.message || 'Failed to fetch team members')
-    }
-
-    if (data.value?.data) {
+    if (response?.data) {
       // Transform DTOs to display format
-      teamMembers.value = data.value.data.map((userDTO: UserDTO) => {
-        const user = UserMapper.toModel(userDTO)
+      teamMembers.value = response.data.map((member) => {
         return {
-          id: user.id,
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-          initials: `${user.firstName[0]}${user.lastName[0]}`,
-          role: user.role,
-          status: 'Active' as const
+          id: member.user_id,
+          name: `${member.first_name} ${member.last_name}`,
+          email: member.email,
+          initials: `${member.first_name[0]}${member.last_name[0]}`,
+          role: member.role,
+          status: member.status === 'active' ? 'Active' as const : 'Pending' as const
         }
       })
     }
@@ -240,7 +235,7 @@ async function handleInviteMember() {
   errorMessage.value = null
   
   try {
-    const response = await addTeamMember(inviteForm.value)
+    const response = await inviteWorkspaceMember(inviteForm.value)
     
     if (response) {
       successMessage.value = `Invitation sent to ${inviteForm.value.email}`
@@ -305,7 +300,7 @@ async function confirmRemoveMember() {
   isRemoving.value = true
   
   try {
-    await removeTeamMember(selectedMember.value.id)
+    await removeWorkspaceMember(selectedMember.value.id)
 
     successMessage.value = `${selectedMember.value.name} has been removed from the team`
     showRemoveModal.value = false

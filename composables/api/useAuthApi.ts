@@ -39,17 +39,6 @@ export function useAuthApi() {
         method: HttpMethod.POST,
         body: request
       })
-  
-  const verifyEmail = (token: string) =>
-      $api<ApiResponse<LoginData>>('/verify-email', {
-        query: { token }
-      })
-  
-  const resendVerification = (request: { email: string }) =>
-      $api<ApiResponse<null>>('/resend-verification', {
-        method: HttpMethod.POST,
-        body: request
-      })
 
   const refreshToken = (request: RefreshTokenRequest) =>
       $api<ApiResponse<RefreshTokenData>>('/auth/refresh', {
@@ -97,8 +86,6 @@ export function useAuthApi() {
     register,
     forgotPassword,
     resetPassword,
-    verifyEmail,
-    resendVerification,
     refreshToken,
     enable2FA,
     verify2FA,

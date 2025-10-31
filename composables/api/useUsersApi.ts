@@ -52,13 +52,24 @@ export function useUsersApi() {
   }
 
   /**
-   * Update a user
+   * Update current user profile
+   * @param data - User update data
+   */
+  const updateCurrentUser = (data: UpdateUserRequest) => {
+    return $api<ApiResponse<UserDTO>>('/users/me', {
+      method: HttpMethod.PATCH,
+      body: data,
+    }).then(response => UserMapper.toModel(response.data!))
+  }
+
+  /**
+   * Update a user (admin only)
    * @param id - User ID
    * @param data - User update data
    */
   const updateUser = (id: string, data: UpdateUserRequest) => {
     return $api<ApiResponse<UserDTO>>(`/users/${id}`, {
-      method: HttpMethod.PUT,
+      method: HttpMethod.PATCH,
       body: data,
     }).then(response => UserMapper.toModel(response.data!))
   }
@@ -81,6 +92,7 @@ export function useUsersApi() {
     getUsers,
     getUser,
     getCurrentUser,
+    updateCurrentUser,
     updateUser,
     getUserWorkspaces,
     updateLastActiveWorkspace,

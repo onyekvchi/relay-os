@@ -187,7 +187,7 @@
 </template>
 
 <script setup lang="ts">
-const { updatePassword } = useSettingsApi()
+const { changePassword } = useAuthApi()
 
 // Password fields
 const currentPassword = ref('')
@@ -221,7 +221,7 @@ async function handlePasswordChange() {
   errorMessage.value = null
 
   try {
-    const response = await updatePassword({
+    const response = await changePassword({
       current_password: currentPassword.value,
       new_password: newPassword.value,
     })

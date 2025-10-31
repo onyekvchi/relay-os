@@ -14,6 +14,10 @@ export interface WorkflowDTO {
   status: 'draft' | 'published' | 'archived'
   start_key: string
   description?: string
+  cloned_from?: {
+    workflow_id: string
+    version: number
+  }
   fields: WorkflowFieldDTO[]
   steps: StepDTO[]
   created_by: UserDTO
@@ -30,6 +34,8 @@ export interface WorkflowFieldDTO {
   required: boolean
   position: number
   options?: string[]
+  default?: any
+  validation?: string
 }
 
 export interface StepDTO {
@@ -40,6 +46,12 @@ export interface StepDTO {
   condition?: string
   next?: string
   branches?: BranchDTO[]
+  join?: string[]
+  action?: {
+    type: 'webhook' | 'email' | 'auto_approve' | 'delay'
+    url?: string
+    delay_seconds?: number
+  }
 }
 
 export interface BranchDTO {

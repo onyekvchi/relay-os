@@ -97,7 +97,7 @@
 import { UserMapper } from '@/models/user'
 
 const authStore = useAuthStore()
-const { updateProfile } = useSettingsApi()
+const { updateCurrentUser } = useUsersApi()
 const user = computed(() => authStore.getUser)
 
 // Form fields
@@ -154,15 +154,14 @@ async function handleSave() {
   errorMessage.value = null
 
   try {
-    const userDTO = await updateProfile({
+    const updatedUser = await updateCurrentUser({
       first_name: firstName.value,
       last_name: lastName.value,
       phone_number: phoneNumber.value,
     })
 
-    if (userDTO) {
-      // Transform DTO to model and update store
-      const updatedUser = UserMapper.toModel(userDTO)
+    if (updatedUser) {
+      // Update store with the updated user model
       authStore.setUser(updatedUser)
       
       successMessage.value = 'Profile updated successfully'

@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-const { getWorkspace, updateWorkspace } = useSettingsApi()
+const { getCurrentWorkspace, updateCurrentWorkspace } = useWorkspaceApi()
 const { canUpdateWorkspace } = usePermissions()
 
 // State
@@ -146,17 +146,13 @@ onMounted(async () => {
 
 async function fetchWorkspace() {
   try {
-    const { data, error } = await getWorkspace()
+    const response = await getCurrentWorkspace()
     
-    if (error.value) {
-      throw new Error(error.value.message || 'Failed to fetch workspace')
-    }
-
-    if (data.value?.data) {
-      workspaceName.value = data.value.data.name
-      workspaceLogo.value = data.value.data.logo
-      originalName.value = data.value.data.name
-      originalLogo.value = data.value.data.logo
+    if (response?.data) {
+      workspaceName.value = response.data.name
+      workspaceLogo.value = response.data.logo
+      originalName.value = response.data.name
+      originalLogo.value = response.data.logo
     }
   } catch (err: any) {
     errorMessage.value = err.message || 'Failed to load workspace'
@@ -171,12 +167,12 @@ async function handleSave() {
   errorMessage.value = null
 
   try {
-    const workspaceData = await updateWorkspace({
+    const response = await updateCurrentWorkspace({
       name: workspaceName.value,
       logo: workspaceLogo.value
     })
 
-    if (workspaceData) {
+    if (response?.data) {
       successMessage.value = 'Workspace updated successfully'
       originalName.value = workspaceName.value
       originalLogo.value = workspaceLogo.value

@@ -5,9 +5,9 @@ export type User = {
   email: string,
   phoneNumber?: string,
   role: UserRole,
-  lastActiveWorkspaceId?: string,
+  lastActiveWorkspaceId?: string | null,
   twofaEnabled?: boolean,
-  emailVerifiedAt?: string,
+  emailVerifiedAt?: string | null,
   createdAt: string,
   updatedAt: string
 }

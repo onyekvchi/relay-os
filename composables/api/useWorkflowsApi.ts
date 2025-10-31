@@ -11,9 +11,18 @@ export function useWorkflowsApi() {
   const { $api } = useNuxtApp()
   const { getCurrentWorkspaceId } = useAuthStore()
 
-  const getWorkflows = (includeArchived = false) => {
+  /**
+   * Fetch workflows with filtering and pagination
+   * @param filters - Optional filters (status, version, page, limit)
+   */
+  const getWorkflows = (filters?: {
+    status?: 'draft' | 'published' | 'archived'
+    version?: 'latest' | 'all'
+    page?: number
+    limit?: number
+  }) => {
     return useApi<Workflow[]>(`/workspaces/${getCurrentWorkspaceId}/workflows`, {
-      query: { includeArchived },
+      query: filters,
       method: HttpMethod.GET,
       transform: (response: ApiResponse<WorkflowDTO[]>) => {
         if (!response?.data) return []
