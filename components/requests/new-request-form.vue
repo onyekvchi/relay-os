@@ -16,40 +16,79 @@
       <!-- Dynamic Workflow Fields -->
       <div v-if="selectedWorkflow" class="space-y-6">
         <USeparator />
-        <template v-for="(field, index) in selectedWorkflow.fields" :key="index">
-          <UFormField :label="field.label" :name="`field_${index}`" required>
+        <template v-for="field in selectedWorkflow.fields" :key="field.key">
+          <UFormField :label="field.label" :name="`field_${field.key}`" :required="field.required">
             <UInput
-              v-if="field.type === WorkflowFieldType.string"
-              v-model="state.fields[index]"
+              v-if="field.type === 'short_text' || field.type === 'email' || field.type === 'url'"
+              v-model="state.context[field.key]"
               type="text"
               class="w-full"
               :placeholder="field.description"
               size="lg"
             />
-            <UInput
-              v-else-if="field.type === WorkflowFieldType.amount || field.type === WorkflowFieldType.integer || field.type === WorkflowFieldType.decimal"
-              v-model="state.fields[index]"
-              type="number"
-              class="w-full"
-              :placeholder="field.description"
-              size="lg"
-            />
             <UTextarea
-              v-else-if="field.type === WorkflowFieldType.text"
-              v-model="state.fields[index]"
+              v-else-if="field.type === 'long_text'"
+              v-model="state.context[field.key]"
               class="w-full"
               :placeholder="field.description"
               :rows="5"
               size="lg"
             />
             <UInput
+              v-else-if="field.type === 'amount' || field.type === 'currency'"
+              v-model="state.context[field.key]"
+              type="number"
+              class="w-full"
+              :placeholder="field.description"
+              size="lg"
+            />
+            <UInput
+              v-else-if="field.type === 'date'"
+              v-model="state.context[field.key]"
+              type="date"
+              class="w-full"
+              size="lg"
+            />
+            <UInput
+              v-else-if="field.type === 'datetime'"
+              v-model="state.context[field.key]"
+              type="datetime-local"
+              class="w-full"
+              size="lg"
+            />
+            <USelectMenu
+              v-else-if="field.type === 'select'"
+              v-model="state.context[field.key]"
+              :items="field.options || []"
+              placeholder="Select an option"
+              class="w-full"
+              size="lg"
+            />
+            <USelectMenu
+              v-else-if="field.type === 'multi_select'"
+              v-model="state.context[field.key]"
+              :items="field.options || []"
+              placeholder="Select options"
+              multiple
+              class="w-full"
+              size="lg"
+            />
+            <UCheckbox
+              v-else-if="field.type === 'boolean'"
+              v-model="state.context[field.key]"
+              :label="field.description"
+            />
+            <UInput
               v-else
-              v-model="state.fields[index]"
+              v-model="state.context[field.key]"
               type="text"
               class="w-full"
               :placeholder="field.description"
               size="lg"
             />
+            <template v-if="field.description" #help>
+              {{ field.description }}
+            </template>
           </UFormField>
         </template>
 
@@ -92,20 +131,36 @@
     </UForm>
 
     <div class="w-md space-y-8">
-      <!-- Approvers (auto-populated from workflow) -->
-      <UFormField v-if="selectedWorkflow" label="Approvers" name="approvers">
-        <div class="flex flex-wrap gap-2 p-3 bg-elevated">
-          <UBadge v-for="approval in selectedWorkflow.approvals" :key="approval.approver.email" color="neutral" variant="outline" size="lg">
-            {{ approval.approver.firstName }} {{ approval.approver.lastName }}
-          </UBadge>
+      <!-- Workflow Steps (auto-populated from workflow) -->
+      <UFormField v-if="selectedWorkflow" label="Workflow Steps" name="steps">
+        <div class="space-y-3">
+          <div v-for="step in selectedWorkflow.steps" :key="step.key" class="p-3 bg-elevated rounded-md">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-xs font-semibold uppercase text-muted">{{ getStepTypeLabel(step.type) }}</h4>
+              <UBadge color="neutral" variant="soft" size="sm">{{ step.key }}</UBadge>
+            </div>
+            <div v-if="step.assignees?.length" class="flex flex-wrap gap-2">
+              <UBadge v-for="assigneeId in step.assignees" :key="assigneeId" color="primary" variant="outline" size="sm">
+                {{ getUserById(assigneeId)?.firstName }} {{ getUserById(assigneeId)?.lastName }}
+              </UBadge>
+            </div>
+            <div v-else-if="step.assignee" class="flex flex-wrap gap-2">
+              <UBadge color="primary" variant="outline" size="sm">
+                {{ getUserById(step.assignee)?.firstName }} {{ getUserById(step.assignee)?.lastName }}
+              </UBadge>
+            </div>
+            <p v-if="step.condition" class="text-xs text-muted mt-2">
+              Condition: {{ step.condition }}
+            </p>
+          </div>
         </div>
       </UFormField>
 
-      <!-- Action Taker (auto-populated from workflow) -->
-      <UFormField v-if="selectedWorkflow" label="Action taker" name="actionTaker">
-        <div class="flex flex-wrap gap-2 p-3 bg-elevated">
-          <UBadge color="neutral" variant="outline" size="lg">
-            {{ selectedWorkflow.action.actor.firstName }} {{ selectedWorkflow.action.actor.lastName }}
+      <!-- Start Step -->
+      <UFormField v-if="selectedWorkflow" label="Start Step" name="startStep">
+        <div class="p-3 bg-elevated rounded-md">
+          <UBadge color="green" variant="soft" size="lg">
+            {{ selectedWorkflow.startKey }}
           </UBadge>
         </div>
       </UFormField>
@@ -115,7 +170,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import { WorkflowFieldType, type Workflow } from '@/models/workflow'
+import type { Workflow } from '@/models/workflow'
 import type { User } from '@/models/user'
 import { routes } from '@/routes'
 
@@ -137,13 +192,30 @@ const selectedFollowers = ref<User[]>([])
 const state = reactive({
   requestType: '',
   followers: [] as User[],
-  fields: {} as Record<number, any>
+  context: {} as Record<string, any>
 })
 
-// Reset fields when workflow changes
+// Step type labels
+const stepTypeLabels: Record<string, string> = {
+  'approval': 'Approval',
+  'action': 'Action',
+  'gateway:exclusive': 'Exclusive Gateway',
+  'gateway:parallel': 'Parallel Gateway',
+  'system_task': 'System Task'
+}
+
+function getStepTypeLabel(type: string): string {
+  return stepTypeLabels[type] || type
+}
+
+function getUserById(id: string): User | undefined {
+  return followers.value?.find(user => user.id === id)
+}
+
+// Reset context when workflow changes
 watch(selectedWorkflow, (newWorkflow) => {
   if (newWorkflow) {
-    state.fields = {}
+    state.context = {}
   }
 })
 
@@ -153,17 +225,11 @@ async function onSubmit() {
   loading.value = true
 
   try {
-    // Map form fields to field_values object
-    const fieldValues: Record<string, any> = {}
-    selectedWorkflow.value.fields.forEach((field, index) => {
-      fieldValues[field.label] = state.fields[index]
-    })
-
-    // Create request via API
+    // Create request via API with new context structure
     await createRequest({
       workflow_id: selectedWorkflow.value.id,
-      field_values: fieldValues,
-      observer_ids: selectedFollowers.value.map(f => f.id)
+      context: state.context,
+      observers: selectedFollowers.value.map(f => f.id)
     })
 
     // Navigate back to requests list

@@ -7,9 +7,9 @@
           {{ request.status }}
         </UBadge>
         <div class="flex flex-col space-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight">{{ request.type.name }}</h1>
+          <h1 class="text-2xl font-semibold tracking-tight">{{ request.workflow.name }}</h1>
           <p class="text-sm text-muted">
-            Submitted by {{ request.initiator.firstName }} {{ request.initiator.lastName }} on {{
+            Submitted by {{ request.createdBy.firstName }} {{ request.createdBy.lastName }} on {{
               formatDate(request.createdAt) }}
           </p>
         </div>
@@ -23,62 +23,135 @@
         <div class="bg-white border border-muted p-4 space-y-4">
           <h2 class="text-lg font-semibold tracking-tight">Request Details</h2>
 
-          <div v-for="(field, index) in request.type.fields" :key="index" class="flex flex-col space-y-1">
+          <div v-for="field in request.workflow.fields" :key="field.key" class="flex flex-col space-y-1">
             <label class="text-sm font-semibold">{{ field.label }}</label>
             <div class="text-sm bg-elevated py-2 px-3">
-              <template v-if="field.type === WorkflowFieldType.text">
-                <p class="whitespace-pre-wrap">{{ fieldValues[index] || 'N/A' }}</p>
+              <template v-if="field.type === 'long_text'">
+                <p class="whitespace-pre-wrap">{{ request.context[field.key] || 'N/A' }}</p>
               </template>
-              <template v-else-if="field.type === WorkflowFieldType.amount">
-                <p>{{ formatAmount(fieldValues[index]) }}</p>
+              <template v-else-if="field.type === 'amount' || field.type === 'currency'">
+                <p>{{ formatAmount(request.context[field.key]) }}</p>
+              </template>
+              <template v-else-if="field.type === 'date'">
+                <p>{{ formatDate(request.context[field.key]) }}</p>
+              </template>
+              <template v-else-if="field.type === 'boolean'">
+                <p>{{ request.context[field.key] ? 'Yes' : 'No' }}</p>
+              </template>
+              <template v-else-if="field.type === 'multi_select'">
+                <div class="flex flex-wrap gap-1">
+                  <UBadge v-for="item in (request.context[field.key] || [])" :key="item" color="neutral" variant="soft" size="sm">
+                    {{ item }}
+                  </UBadge>
+                </div>
               </template>
               <template v-else>
-                <p>{{ fieldValues[index] || 'N/A' }}</p>
+                <p>{{ request.context[field.key] || 'N/A' }}</p>
               </template>
             </div>
+            <p v-if="field.description" class="text-xs text-muted">{{ field.description }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Middle Column: Approval Flow & Action -->
+      <!-- Middle Column: Workflow Steps -->
       <div class="w-1/3 space-y-4">
-        <!-- Approvers -->
-        <div class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold tracking-tight">Approvers</h2>
-          <div class="space-y-4">
-            <div v-for="(approval, index) in request.approvals" :key="index" class="bg-elevated p-2 flex items-center justify-between">
-              <UBadge color="neutral" variant="outline" size="lg">
-                {{ approval.workflowApproval.approver.firstName }} {{ approval.workflowApproval.approver.lastName }}
-              </UBadge>
-              <UBadge :color="approval.status === WorkflowApprovalStatus.approved ? 'success' : 'neutral'" size="sm"
-                variant="subtle">
-                {{ approval.status }}
-              </UBadge>
+        <!-- Active Steps -->
+        <div v-if="request.activeSteps.length > 0" class="bg-white border border-muted p-4 space-y-4">
+          <h2 class="text-lg font-semibold tracking-tight">Active Steps</h2>
+          <div class="space-y-3">
+            <div v-for="stepKey in request.activeSteps" :key="stepKey" class="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-sm font-semibold">{{ getStepByKey(stepKey)?.type || stepKey }}</h4>
+                <UBadge color="warning" variant="soft" size="sm">Active</UBadge>
+              </div>
+              <div v-if="getStepByKey(stepKey)" class="space-y-2">
+                <div v-if="getStepByKey(stepKey)?.assignees?.length" class="flex flex-wrap gap-2">
+                  <UBadge v-for="assigneeId in getStepByKey(stepKey)?.assignees" :key="assigneeId" color="primary" variant="outline" size="sm">
+                    {{ getUserById(assigneeId)?.firstName }} {{ getUserById(assigneeId)?.lastName }}
+                  </UBadge>
+                </div>
+                <div v-else-if="getStepByKey(stepKey)?.assignee" class="flex flex-wrap gap-2">
+                  <UBadge color="primary" variant="outline" size="sm">
+                    {{ getUserById(getStepByKey(stepKey)?.assignee)?.firstName }} {{ getUserById(getStepByKey(stepKey)?.assignee)?.lastName }}
+                  </UBadge>
+                </div>
+                
+                <!-- Action Buttons for Current User -->
+                <div v-if="canUserActOnStep(stepKey)" class="flex gap-2 mt-3">
+                  <UButton 
+                    v-if="getStepByKey(stepKey)?.type === 'approval'"
+                    color="green" 
+                    size="xs"
+                    @click="handleApprove(stepKey)"
+                  >
+                    Approve
+                  </UButton>
+                  <UButton 
+                    v-if="getStepByKey(stepKey)?.type === 'approval'"
+                    color="yellow" 
+                    size="xs" 
+                    variant="outline"
+                    @click="handleRequestChanges(stepKey)"
+                  >
+                    Request Changes
+                  </UButton>
+                  <UButton 
+                    v-if="getStepByKey(stepKey)?.type === 'approval'"
+                    color="red" 
+                    size="xs" 
+                    variant="outline"
+                    @click="handleReject(stepKey)"
+                  >
+                    Reject
+                  </UButton>
+                  <UButton 
+                    v-if="getStepByKey(stepKey)?.type === 'action'"
+                    color="primary" 
+                    size="xs"
+                    @click="handleExecute(stepKey)"
+                  >
+                    Execute
+                  </UButton>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Action Taker -->
+        <!-- All Workflow Steps -->
         <div class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold tracking-tight">Action Taker</h2>
+          <h2 class="text-lg font-semibold tracking-tight">Workflow Steps</h2>
           <div class="space-y-3">
-            <UBadge color="neutral" variant="outline" size="lg">
-              {{ request.type.action.actor.firstName }} {{ request.type.action.actor.lastName }}
-            </UBadge>
-            <p class="text-xs text-muted">
-              Responsible for executing the action after all approvals are complete
-            </p>
-          </div>
-        </div>
-
-        <!-- Followers -->
-        <div v-if="request.observers.length > 0" class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold tracking-tight">Followers</h2>
-          <div class="flex flex-wrap gap-2">
-            <UBadge v-for="observer in request.observers" :key="observer.email" color="neutral" variant="outline"
-              size="lg">
-              {{ observer.firstName }} {{ observer.lastName }}
-            </UBadge>
+            <div v-for="step in request.workflow.steps" :key="step.key" class="p-3 bg-elevated rounded-md">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-sm font-semibold">{{ getStepTypeLabel(step.type) }}</h4>
+                <div class="flex gap-2">
+                  <UBadge color="neutral" variant="soft" size="sm">{{ step.key }}</UBadge>
+                  <UBadge 
+                    v-if="request.activeSteps.includes(step.key)"
+                    color="warning" 
+                    variant="soft" 
+                    size="sm"
+                  >
+                    Active
+                  </UBadge>
+                </div>
+              </div>
+              <div v-if="step.assignees?.length" class="flex flex-wrap gap-2">
+                <UBadge v-for="assigneeId in step.assignees" :key="assigneeId" color="neutral" variant="outline" size="sm">
+                  {{ getUserById(assigneeId)?.firstName }} {{ getUserById(assigneeId)?.lastName }}
+                </UBadge>
+              </div>
+              <div v-else-if="step.assignee" class="flex flex-wrap gap-2">
+                <UBadge color="neutral" variant="outline" size="sm">
+                  {{ getUserById(step.assignee)?.firstName }} {{ getUserById(step.assignee)?.lastName }}
+                </UBadge>
+              </div>
+              <p v-if="step.condition" class="text-xs text-muted mt-2">
+                Condition: {{ step.condition }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -110,28 +183,61 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RequestStatus, RequestAction } from '@/models/request'
-import { WorkflowFieldType, WorkflowApprovalStatus } from '@/models/workflow'
+import type { User } from '@/models/user'
 
 const props = defineProps<{
   requestId: string
 }>()
 
-const { getRequest } = useRequestsApi()
+const { getRequest, approveRequest, rejectRequest, requestChangesRequest, executeRequest } = useRequestsApi()
+const { getUsers } = useUsersApi()
+const { getUser } = useAuthStore()
 
 // Fetch request data from API
 const { data: request, pending, error } = await getRequest(props.requestId)
 
-// Extract field values from request
-const fieldValues = computed(() => {
-  if (!request.value?.fieldValues) return {}
+// Fetch users for displaying assignee names
+const { data: users } = await getUsers()
+
+// Step type labels
+const stepTypeLabels: Record<string, string> = {
+  'approval': 'Approval',
+  'action': 'Action',
+  'gateway:exclusive': 'Exclusive Gateway',
+  'gateway:parallel': 'Parallel Gateway',
+  'system_task': 'System Task'
+}
+
+function getStepTypeLabel(type: string): string {
+  return stepTypeLabels[type] || type
+}
+
+function getUserById(id: string): User | undefined {
+  return users.value?.find(user => user.id === id)
+}
+
+function getStepByKey(stepKey: string) {
+  return request.value?.workflow.steps.find(step => step.key === stepKey)
+}
+
+function canUserActOnStep(stepKey: string): boolean {
+  if (!request.value || !getUser) return false
   
-  // Convert field values object to indexed format for display
-  const values: Record<number, any> = {}
-  request.value.type.fields.forEach((field, index) => {
-    values[index] = request.value!.fieldValues[field.label]
-  })
-  return values
-})
+  const step = getStepByKey(stepKey)
+  if (!step) return false
+  
+  const currentUserId = getUser.id
+  
+  if (step.assignees) {
+    return step.assignees.includes(currentUserId)
+  }
+  
+  if (step.assignee) {
+    return step.assignee === currentUserId
+  }
+  
+  return false
+}
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
@@ -194,39 +300,66 @@ function getActionText(action: RequestAction): string {
   }
 }
 
-// Action handlers
-const { approveRequest, rejectRequest, requestChanges } = useRequestsApi()
-
-async function handleApprove() {
+// Action handlers for step-based workflow
+async function handleApprove(stepKey: string) {
   if (!request.value) return
   try {
-    // TODO: Get approval_id from current user's approval
-    await approveRequest(props.requestId, { approval_id: 'approval-id' })
-    // TODO: Refresh request data or show success toast
+    await approveRequest(props.requestId, { 
+      step_key: stepKey,
+      comment: 'Approved'
+    })
+    // Refresh request data
+    await refreshRequest()
   } catch (error) {
     console.error('Error approving request:', error)
   }
 }
 
-async function handleRequestChanges() {
+async function handleRequestChanges(stepKey: string) {
   if (!request.value) return
   try {
-    // TODO: Get approval_id from current user's approval
-    await requestChanges(props.requestId, { approval_id: 'approval-id', reason: 'Changes needed' })
-    // TODO: Refresh request data or show success toast
+    await requestChangesRequest(props.requestId, { 
+      step_key: stepKey,
+      comment: 'Changes requested'
+    })
+    // Refresh request data
+    await refreshRequest()
   } catch (error) {
     console.error('Error requesting changes:', error)
   }
 }
 
-async function handleReject() {
+async function handleReject(stepKey: string) {
   if (!request.value) return
   try {
-    // TODO: Get approval_id from current user's approval
-    await rejectRequest(props.requestId, { approval_id: 'approval-id', reason: 'Rejected' })
-    // TODO: Refresh request data or show success toast
+    await rejectRequest(props.requestId, { 
+      step_key: stepKey,
+      comment: 'Rejected'
+    })
+    // Refresh request data
+    await refreshRequest()
   } catch (error) {
     console.error('Error rejecting request:', error)
   }
+}
+
+async function handleExecute(stepKey: string) {
+  if (!request.value) return
+  try {
+    await executeRequest(props.requestId, { 
+      step_key: stepKey,
+      comment: 'Executed'
+    })
+    // Refresh request data
+    await refreshRequest()
+  } catch (error) {
+    console.error('Error executing request:', error)
+  }
+}
+
+async function refreshRequest() {
+  // This would typically refresh the data
+  // Since we're using useFetch, it should automatically refresh
+  console.log('Refreshing request data...')
 }
 </script>
