@@ -159,7 +159,7 @@
       <!-- Start Step -->
       <UFormField v-if="selectedWorkflow" label="Start Step" name="startStep">
         <div class="p-3 bg-elevated rounded-md">
-          <UBadge color="green" variant="soft" size="lg">
+          <UBadge color="success" variant="soft" size="lg">
             {{ selectedWorkflow.startKey }}
           </UBadge>
         </div>

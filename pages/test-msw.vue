@@ -529,11 +529,11 @@ async function testWorkflowNestedObjects() {
   if (!workflow.created_by || !workflow.created_by.first_name) {
     throw new Error('Workflow missing nested creator object')
   }
-  if (!workflow.approvals || workflow.approvals.length === 0) {
-    throw new Error('Workflow missing approvals')
+  if (!workflow.steps || workflow.steps.length === 0) {
+    throw new Error('Workflow missing steps')
   }
-  if (!workflow.approvals[0].approver || !workflow.approvals[0].approver.email) {
-    throw new Error('Approval missing nested approver object')
+  if (!workflow.fields || workflow.fields.length === 0) {
+    throw new Error('Workflow missing fields')
   }
 }
 

@@ -75,14 +75,12 @@ onMounted(async () => {
     const response = await verifyEmail(token)
     
     if (response.data) {
-      const { token: authToken, user: userDTO } = response.data
+      const { user: userDTO, access_token, refresh_token, expires_in } = response.data
       
       // Transform DTO to domain model
       const user = UserMapper.toModel(userDTO)
       
-      authStore.setToken(authToken)
-      authStore.setUser(user)
-      
+      authStore.setAuth({ user, access_token, refresh_token, expires_in })
       isSuccess.value = true
       isLoading.value = false
       

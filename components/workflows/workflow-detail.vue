@@ -3,14 +3,14 @@
     <!-- Header with Status -->
     <div class="flex items-center justify-between">
       <div class="space-y-4">
-        <UBadge :color="workflow.isArchived ? 'neutral' : 'success'" variant="subtle">
-          {{ workflow.isArchived ? 'Archived' : 'Active' }}
+        <UBadge :color="workflow.status === 'archived' ? 'neutral' : 'success'" variant="subtle">
+          {{ workflow.status === 'archived' ? 'Archived' : workflow.status === 'published' ? 'Published' : 'Draft' }}
         </UBadge>
         <div class="flex flex-col space-y-1">
           <h1 class="text-2xl font-semibold tracking-tight">{{ workflow.name }}</h1>
           <p class="text-sm text-muted">
             {{ workflow.fields.length }} field{{ workflow.fields.length !== 1 ? 's' : '' }} · 
-            {{ workflow.approvals.length }} approval{{ workflow.approvals.length !== 1 ? 's' : '' }}
+            {{ workflow.steps.length }} step{{ workflow.steps.length !== 1 ? 's' : '' }}
           </p>
         </div>
       </div>
@@ -36,38 +36,38 @@
         </div>
       </div>
 
-      <!-- Middle Column: Approval Flow & Action -->
+      <!-- Middle Column: Workflow Steps -->
       <div class="w-1/3 space-y-4">
-        <!-- Approvers -->
+        <!-- Steps -->
         <div class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold tracking-tight">Approval Levels</h2>
+          <h2 class="text-lg font-semibold tracking-tight">Workflow Steps</h2>
           
-          <div v-if="workflow.approvals.length === 0" class="text-sm text-muted py-4">
-            No approvals configured.
+          <div v-if="workflow.steps.length === 0" class="text-sm text-muted py-4">
+            No steps configured.
           </div>
 
           <div class="space-y-3">
-            <div v-for="(level, index) in approvalLevels" :key="index" class="space-y-2">
-              <div class="text-xs font-semibold text-muted uppercase">Level {{ index + 1 }}</div>
-              <div class="bg-elevated p-2 flex flex-wrap gap-2">
-                <UBadge v-for="approver in level" :key="approver.id" color="neutral" variant="outline" size="lg">
-                  {{ approver.firstName }} {{ approver.lastName }}
-                </UBadge>
+            <div v-for="(step, index) in workflow.steps" :key="step.key" class="space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="text-xs font-semibold text-muted uppercase">{{ getStepTypeLabel(step.type) }}</div>
+                <UBadge color="neutral" variant="soft" size="sm">{{ step.key }}</UBadge>
+              </div>
+              <div class="bg-elevated p-2 space-y-2">
+                <div v-if="step.assignees?.length" class="flex flex-wrap gap-2">
+                  <UBadge v-for="assigneeId in step.assignees" :key="assigneeId" color="neutral" variant="outline" size="sm">
+                    {{ getUserById(assigneeId)?.firstName }} {{ getUserById(assigneeId)?.lastName }}
+                  </UBadge>
+                </div>
+                <div v-else-if="step.assignee" class="flex flex-wrap gap-2">
+                  <UBadge color="neutral" variant="outline" size="sm">
+                    {{ getUserById(step.assignee)?.firstName }} {{ getUserById(step.assignee)?.lastName }}
+                  </UBadge>
+                </div>
+                <p v-if="step.condition" class="text-xs text-muted">
+                  Condition: {{ step.condition }}
+                </p>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Action Taker -->
-        <div class="bg-white border border-muted p-4 space-y-4">
-          <h2 class="text-lg font-semibold tracking-tight">Action Taker</h2>
-          <div class="space-y-3">
-            <UBadge color="neutral" variant="outline" size="lg">
-              {{ workflow.action.actor.firstName }} {{ workflow.action.actor.lastName }}
-            </UBadge>
-            <p class="text-xs text-muted">
-              Responsible for executing the action after all approvals are complete
-            </p>
           </div>
         </div>
       </div>
@@ -137,24 +137,25 @@ const { getWorkflow } = useWorkflowsApi()
 // Fetch workflow data from API
 const { data: workflow, pending, error } = await getWorkflow(props.workflowId)
 
-// Group approvals by order level
-const approvalLevels = computed(() => {
-  if (!workflow.value) return []
-  
-  const levels: Record<number, User[]> = {}
-  workflow.value.approvals.forEach(approval => {
-    if (!levels[approval.order]) {
-      levels[approval.order] = []
-    }
-    levels[approval.order].push(approval.approver)
-  })
-  
-  // Convert to array sorted by order
-  return Object.keys(levels)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .map(order => levels[order])
-})
+// Step type labels
+const stepTypeLabels: Record<string, string> = {
+  'approval': 'Approval',
+  'action': 'Action',
+  'gateway:exclusive': 'Exclusive Gateway',
+  'gateway:parallel': 'Parallel Gateway',
+  'system_task': 'System Task'
+}
+
+function getStepTypeLabel(type: string): string {
+  return stepTypeLabels[type] || type
+}
+
+// Sample users data - TODO: fetch from API when needed
+const users = ref<User[]>([])
+
+function getUserById(id: string): User | undefined {
+  return users.value.find(user => user.id === id)
+}
 
 // Sample usage statistics - TODO: fetch from API when endpoint is available
 const usageStats = ref({
@@ -183,22 +184,28 @@ function formatDate(dateString?: string): string {
 
 function getFieldTypeLabel(type: WorkflowFieldType): string {
   switch (type) {
-    case WorkflowFieldType.string:
+    case WorkflowFieldType.short_text:
       return 'Short Text'
-    case WorkflowFieldType.text:
+    case WorkflowFieldType.long_text:
       return 'Long Text'
+    case WorkflowFieldType.currency:
+      return 'Currency'
     case WorkflowFieldType.amount:
       return 'Amount'
-    case WorkflowFieldType.integer:
-      return 'Integer'
-    case WorkflowFieldType.decimal:
-      return 'Decimal'
-    case WorkflowFieldType.list:
-      return 'List'
-    case WorkflowFieldType.user:
-      return 'User'
-    case WorkflowFieldType.entity:
-      return 'Entity'
+    case WorkflowFieldType.select:
+      return 'Select'
+    case WorkflowFieldType.multi_select:
+      return 'Multi Select'
+    case WorkflowFieldType.date:
+      return 'Date'
+    case WorkflowFieldType.datetime:
+      return 'Date Time'
+    case WorkflowFieldType.boolean:
+      return 'Boolean'
+    case WorkflowFieldType.email:
+      return 'Email'
+    case WorkflowFieldType.url:
+      return 'URL'
     default:
       return 'Unknown'
   }

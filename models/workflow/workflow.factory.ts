@@ -10,58 +10,65 @@ export function mockWorkflow(params: Partial<Workflow> = {}): Workflow {
   return {
     id: params.id ?? `workflow-${Date.now()}`,
     name: params.name ?? 'Pricing Change Request',
-    description: params.description,
-    isArchived: params.isArchived ?? false,
+    workflowKey: params.workflowKey ?? 'pricing_change',
+    version: params.version ?? 1,
+    status: params.status ?? 'published',
+    startKey: params.startKey ?? 'start',
+    description: params.description ?? 'Request workflow for pricing changes',
     createdBy: params.createdBy ?? mockUser(),
     createdAt: params.createdAt ?? new Date().toISOString(),
     updatedAt: params.updatedAt ?? new Date().toISOString(),
     fields: params.fields ?? [{
       id: 'field-1',
+      key: 'merchant_name',
       label: 'Merchant name',
-      type: WorkflowFieldType.string,
+      type: WorkflowFieldType.short_text,
       description: 'Whose pricing do you want to change?',
       required: true,
-      order: 0
+      position: 0
     }, {
       id: 'field-2',
+      key: 'old_price',
       label: 'Old price',
       type: WorkflowFieldType.amount,
       description: 'How much were they paying before?',
       required: true,
-      order: 1
+      position: 1
     }, {
       id: 'field-3',
+      key: 'new_price',
       label: 'New price',
       type: WorkflowFieldType.amount,
       description: 'How much do we want to change it to?',
       required: true,
-      order: 2
+      position: 2
     }, {
       id: 'field-4',
+      key: 'reason',
       label: 'Reason for the change',
-      type: WorkflowFieldType.text,
+      type: WorkflowFieldType.long_text,
       description: 'How are we justifying this change?',
       required: true,
-      order: 3
+      position: 3
     }],
-    approvals: params.approvals ?? [
+    steps: params.steps ?? [
       {
-        id: 'approval-1',
-        approverId: approver1.id,
-        approver: approver1,
-        order: 0
+        key: 'approval_1',
+        type: 'approval',
+        assignees: [approver1.id],
+        next: 'approval_2'
       },
       {
-        id: 'approval-2',
-        approverId: approver2.id,
-        approver: approver2,
-        order: 1
+        key: 'approval_2',
+        type: 'approval',
+        assignees: [approver2.id],
+        next: 'action_1'
+      },
+      {
+        key: 'action_1',
+        type: 'action',
+        assignee: actor.id
       }
-    ],
-    action: params.action ?? {
-      id: 'action-1',
-      actorId: actor.id,
-      actor
-    }
+    ]
   }
 }

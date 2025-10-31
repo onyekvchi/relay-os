@@ -145,45 +145,57 @@
               </UButton>
             </div>
 
-            <UFormField :label="`Level ${stepIndex + 1} Approvers`" :name="`step_${stepIndex}_approvers`" required>
+            <UFormField label="Step Type" :name="`step_${stepIndex}_type`" required>
               <USelectMenu
-                v-model="step.approvers"
-                :items="availableUsers"
-                label-key="email"
-                placeholder="Select approvers"
+                v-model="step.type"
+                :items="[
+                  { label: 'Approval', value: 'approval' },
+                  { label: 'Action', value: 'action' },
+                  { label: 'Exclusive Gateway', value: 'gateway:exclusive' },
+                  { label: 'Parallel Gateway', value: 'gateway:parallel' },
+                  { label: 'System Task', value: 'system_task' }
+                ]"
+                label-key="label"
+                value-key="value"
+                placeholder="Select step type"
                 size="md"
-                multiple
                 class="w-full"
               />
             </UFormField>
 
-            <div v-if="step.approvers.length > 0" class="flex flex-wrap gap-2">
-              <UBadge v-for="approver in step.approvers" :key="approver.email" color="neutral" variant="outline" size="md">
-                {{ approver.firstName }} {{ approver.lastName }}
+            <UFormField v-if="step.type === 'approval' || step.type === 'action'" :label="step.type === 'approval' ? 'Assignees' : 'Assignee'" :name="`step_${stepIndex}_assignees`" required>
+              <USelectMenu
+                v-model="step.assignees"
+                :items="availableUsers?.map(user => ({ label: `${user.firstName} ${user.lastName}`, value: user.id })) || []"
+                label-key="label"
+                value-key="value"
+                :placeholder="step.type === 'approval' ? 'Select assignees' : 'Select assignee'"
+                size="md"
+                :multiple="step.type === 'approval'"
+                class="w-full"
+              />
+            </UFormField>
+
+            <div v-if="step.assignees?.length" class="flex flex-wrap gap-2">
+              <UBadge v-for="assigneeId in step.assignees" :key="assigneeId" color="neutral" variant="outline" size="md">
+                {{ getUserById(assigneeId)?.firstName }} {{ getUserById(assigneeId)?.lastName }}
               </UBadge>
             </div>
           </div>
         </div>
       </UFormField>
 
-      <!-- Action Taker -->
-      <UFormField label="Action Taker" name="actionTaker" required>
-        <USelectMenu
-          v-model="state.actionTaker"
-          :items="availableUsers"
-          label-key="email"
-          placeholder="Select action taker"
+      <!-- Start Key -->
+      <UFormField label="Start Step Key" name="startKey" required>
+        <UInput
+          v-model="state.startKey"
+          placeholder="e.g., start"
           size="lg"
           class="w-full"
         />
         <template #help>
-          Who will execute the action after all approvals are complete?
+          The key of the first step in the workflow
         </template>
-        <div v-if="state.actionTaker" class="flex flex-wrap gap-2 mt-2">
-          <UBadge color="neutral" variant="outline" size="lg">
-            {{ state.actionTaker.firstName }} {{ state.actionTaker.lastName }}
-          </UBadge>
-        </div>
       </UFormField>
     </div>
   </div>
@@ -203,7 +215,11 @@ const loading = ref(false)
 const { getWorkflow, updateWorkflow } = useWorkflowsApi()
 const { getUsers } = useUsersApi()
 
-// Fetch available users for approvers and action taker
+// Fetch available users for step assignees
+
+function getUserById(id: string) {
+  return availableUsers.value?.find(user => user.id === id)
+}
 const { data: availableUsers, pending: usersLoading } = await getUsers()
 
 // Fetch existing workflow data
@@ -211,50 +227,55 @@ const { data: existingWorkflow, pending: workflowLoading } = await getWorkflow(p
 
 // Field type options
 const fieldTypes = [
-  { label: 'Short Text', value: WorkflowFieldType.string },
-  { label: 'Long Text', value: WorkflowFieldType.text },
+  { label: 'Short Text', value: WorkflowFieldType.short_text },
+  { label: 'Long Text', value: WorkflowFieldType.long_text },
+  { label: 'Currency', value: WorkflowFieldType.currency },
   { label: 'Amount', value: WorkflowFieldType.amount },
-  { label: 'Integer', value: WorkflowFieldType.integer },
-  { label: 'Decimal', value: WorkflowFieldType.decimal },
-  { label: 'List', value: WorkflowFieldType.list },
-  { label: 'User', value: WorkflowFieldType.user },
-  { label: 'Entity', value: WorkflowFieldType.entity },
+  { label: 'Select', value: WorkflowFieldType.select },
+  { label: 'Multi Select', value: WorkflowFieldType.multi_select },
+  { label: 'Date', value: WorkflowFieldType.date },
+  { label: 'Date Time', value: WorkflowFieldType.datetime },
+  { label: 'Boolean', value: WorkflowFieldType.boolean },
+  { label: 'Email', value: WorkflowFieldType.email },
+  { label: 'URL', value: WorkflowFieldType.url },
 ]
 
 // Form state
 const state = reactive({
   name: '',
+  startKey: '',
   fields: [] as Array<{ label: string, type: WorkflowFieldType, description: string }>,
-  steps: [] as Array<{ approvers: User[] }>,
-  actionTaker: undefined as User | undefined
+  steps: [] as Array<{ 
+    key: string
+    type: 'approval' | 'action' | 'gateway:exclusive' | 'gateway:parallel' | 'system_task'
+    assignees?: string[]
+    assignee?: string
+    condition?: string
+    next?: string
+    branches?: Array<{ condition: string; to: string }>
+  }>
 })
 
 // Load existing workflow data into form state
 watch(existingWorkflow, (workflow) => {
   if (workflow) {
     state.name = workflow.name
+    state.startKey = workflow.startKey
     state.fields = workflow.fields.map(f => ({
       label: f.label,
       type: f.type,
-      description: f.description
+      description: f.description || ''
     }))
     
-    // Group approvals by order to create steps
-    const approvalsByOrder = workflow.approvals.reduce((acc, approval) => {
-      if (!acc[approval.order]) acc[approval.order] = []
-      acc[approval.order].push(approval.approver)
-      return acc
-    }, {} as Record<number, User[]>)
-    
-    state.steps = Object.values(approvalsByOrder).map(approvers => ({ approvers }))
-    state.actionTaker = workflow.action.actor
+    // Load steps from new step-based system
+    state.steps = workflow.steps || []
   }
 }, { immediate: true })
 
 function addField() {
   state.fields.push({
     label: '',
-    type: WorkflowFieldType.string,
+    type: WorkflowFieldType.short_text,
     description: ''
   })
 }
@@ -265,7 +286,9 @@ function removeField(index: number) {
 
 function addApprovalStep() {
   state.steps.push({
-    approvers: []
+    key: `step_${state.steps.length + 1}`,
+    type: 'approval',
+    assignees: []
   })
 }
 
@@ -278,35 +301,24 @@ function handleCancel() {
 }
 
 async function onSubmit() {
-  if (!state.actionTaker) return
-
   loading.value = true
 
   try {
-    // Build approvals array with order information
-    // Approvers in the same step get the same order number
-    const approvals: Array<{ approver_id: string; order: number }> = []
-    state.steps.forEach((step, stepIndex) => {
-      step.approvers.forEach(approver => {
-        approvals.push({
-          approver_id: approver.id,
-          order: stepIndex
-        })
-      })
-    })
-
     // Update workflow via API
     await updateWorkflow(props.workflowId, {
       name: state.name,
+      workflow_key: existingWorkflow.value?.workflowKey || '',
+      start_key: existingWorkflow.value?.startKey || 'start',
+      description: existingWorkflow.value?.description,
       fields: state.fields.map((field, index) => ({
+        key: field.label.toLowerCase().replace(/\s+/g, '_'),
         label: field.label,
         type: String(field.type),
         description: field.description,
         required: true,
-        order: index
+        position: index
       })),
-      approvals: approvals,
-      action_actor_id: state.actionTaker.id
+      steps: state.steps
     })
 
     // Navigate back to workflow detail

@@ -32,17 +32,15 @@ const columns: TableColumn<Workflow & { id: string }>[] = [
   },
   {
     accessorFn: (row) => {
-      return row.approvals.length
+      return row.steps.length
     },
-    header: 'Approvals'
+    header: 'Steps'
   },
   {
     accessorFn: (row) => {
-      const firstName = row.action.actor.firstName
-      const lastName = row.action.actor.lastName
-      return `${firstName} ${lastName}`
+      return row.status
     },
-    header: 'Executor'
+    header: 'Status'
   },
 ]
 

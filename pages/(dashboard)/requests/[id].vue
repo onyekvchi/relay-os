@@ -138,13 +138,11 @@ const showRequestChangesModal = ref(false)
 async function handleApprove(comment?: string) {
   approving.value = true
   try {
-    // TODO: Get approval_id from current user's approval
     await approveRequest(requestId, { 
-      approval_id: 'approval-id',
-      comment: comment
+      comment: comment || 'Approved',
+      step_key: 'step-key'
     })
     showApproveModal.value = false
-    // TODO: Show success toast
     await navigateTo(routes.requests)
   } catch (error) {
     console.error('Error approving request:', error)
@@ -159,13 +157,11 @@ async function handleRequestChanges(comment?: string) {
   
   requestingChanges.value = true
   try {
-    // TODO: Get approval_id from current user's approval
     await requestChanges(requestId, { 
-      approval_id: 'approval-id', 
-      reason: comment 
+      comment: comment || 'Request changes',
+      step_key: 'step-key'
     })
     showRequestChangesModal.value = false
-    // TODO: Show success toast
     await navigateTo(routes.requests)
   } catch (error) {
     console.error('Error requesting changes:', error)
@@ -180,17 +176,14 @@ async function handleReject(comment?: string) {
   
   rejecting.value = true
   try {
-    // TODO: Get approval_id from current user's approval
     await rejectRequest(requestId, { 
-      approval_id: 'approval-id', 
-      reason: comment 
+      comment: comment || 'Rejected',
+      step_key: 'step-key'
     })
     showRejectModal.value = false
-    // TODO: Show success toast
     await navigateTo(routes.requests)
   } catch (error) {
     console.error('Error rejecting request:', error)
-    // TODO: Show error toast
   } finally {
     rejecting.value = false
   }

@@ -81,7 +81,7 @@
                 <div v-if="canUserActOnStep(stepKey)" class="flex gap-2 mt-3">
                   <UButton 
                     v-if="getStepByKey(stepKey)?.type === 'approval'"
-                    color="green" 
+                    color="success" 
                     size="xs"
                     @click="handleApprove(stepKey)"
                   >
@@ -89,7 +89,7 @@
                   </UButton>
                   <UButton 
                     v-if="getStepByKey(stepKey)?.type === 'approval'"
-                    color="yellow" 
+                    color="warning" 
                     size="xs" 
                     variant="outline"
                     @click="handleRequestChanges(stepKey)"
@@ -98,7 +98,7 @@
                   </UButton>
                   <UButton 
                     v-if="getStepByKey(stepKey)?.type === 'approval'"
-                    color="red" 
+                    color="error" 
                     size="xs" 
                     variant="outline"
                     @click="handleReject(stepKey)"
@@ -189,7 +189,7 @@ const props = defineProps<{
   requestId: string
 }>()
 
-const { getRequest, approveRequest, rejectRequest, requestChangesRequest, executeRequest } = useRequestsApi()
+const { getRequest, approveRequest, rejectRequest, requestChanges, executeRequest } = useRequestsApi()
 const { getUsers } = useUsersApi()
 const { getUser } = useAuthStore()
 
@@ -318,7 +318,7 @@ async function handleApprove(stepKey: string) {
 async function handleRequestChanges(stepKey: string) {
   if (!request.value) return
   try {
-    await requestChangesRequest(props.requestId, { 
+    await requestChanges(props.requestId, { 
       step_key: stepKey,
       comment: 'Changes requested'
     })

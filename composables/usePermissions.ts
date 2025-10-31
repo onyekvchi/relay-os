@@ -112,8 +112,12 @@ export function usePermissions() {
     )
     if (hasApproval) return true
 
-    // Users can see requests they need to action
-    if (request.type?.action?.actor?.id === currentUser.value.id) return true
+    // Users can see requests where they are assigned to active steps
+    const hasActiveStepAssignment = request.activeSteps?.some(stepKey => {
+      const step = request.workflow?.steps?.find(s => s.key === stepKey)
+      return step?.assignees?.includes(currentUser.value.id) || step?.assignee === currentUser.value.id
+    })
+    if (hasActiveStepAssignment) return true
 
     // Users can see requests where they are observers
     const isObserver = request.observers?.some(
@@ -160,7 +164,11 @@ export function usePermissions() {
     }
 
     // Must be assigned as an actor
-    return request.type?.action?.actor?.id === currentUser.value.id
+    // Check if user is assigned to any active step
+    return request.activeSteps?.some(stepKey => {
+      const step = request.workflow?.steps?.find(s => s.key === stepKey)
+      return step?.assignees?.includes(currentUser.value.id) || step?.assignee === currentUser.value.id
+    }) || false
   }
 
   /**
