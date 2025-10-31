@@ -171,27 +171,37 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
 import type { Workflow } from '@/models/workflow'
-import type { User } from '@/models/user'
+import type { WorkspaceMember } from '@/types/workspace'
 import { routes } from '@/routes'
 
 const loading = ref(false)
 const { getWorkflows } = useWorkflowsApi()
-const { getUsers } = useUsersApi()
+const { getCurrentWorkspaceMembers } = useWorkspaceApi()
 const { createRequest } = useRequestsApi()
 
 // Fetch workflows from API
 const { data: workflows, pending: workflowsLoading } = await getWorkflows()
 
-// Fetch users for followers
-const { data: followers, pending: followersLoading } = await getUsers()
+// Fetch workspace members for followers
+const membersResponse = await getCurrentWorkspaceMembers()
+const followers = computed((): WorkspaceMember[] => {
+  return membersResponse?.data?.map(m => ({
+    id: m.user_id,
+    firstName: m.first_name,
+    lastName: m.last_name,
+    email: m.email,
+    role: m.role
+  })) || []
+})
+const followersLoading = ref(false)
 
 // Form state
 const selectedWorkflow = ref<Workflow | undefined>(undefined)
-const selectedFollowers = ref<User[]>([])
+const selectedFollowers = ref<WorkspaceMember[]>([])
 
 const state = reactive({
   requestType: '',
-  followers: [] as User[],
+  followers: [] as WorkspaceMember[],
   context: {} as Record<string, any>
 })
 
@@ -208,7 +218,7 @@ function getStepTypeLabel(type: string): string {
   return stepTypeLabels[type] || type
 }
 
-function getUserById(id: string): User | undefined {
+function getUserById(id: string): WorkspaceMember | undefined {
   return followers.value?.find(user => user.id === id)
 }
 

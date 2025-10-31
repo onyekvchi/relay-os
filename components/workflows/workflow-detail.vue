@@ -110,6 +110,7 @@ const emit = defineEmits<{
 }>()
 
 const { getWorkflow } = useWorkflowsApi()
+const { getCurrentWorkspaceMembers } = useWorkspaceApi()
 
 // Fetch workflow data from API
 const { data: workflow, pending, error } = await getWorkflow(props.workflowId)
@@ -127,12 +128,20 @@ function getStepTypeLabel(type: string): string {
   return stepTypeLabels[type] || type
 }
 
-// Sample users data - TODO: fetch from API when needed
-const users = ref<User[]>([])
+// Fetch workspace members
+const membersResponse = await getCurrentWorkspaceMembers()
+const members = membersResponse?.data || []
 
-function getUserById(id: string): User | undefined {
-  return users.value.find(user => user.id === id)
-}
+const getUserById = computed(() => {
+  return (userId: string): { firstName: string; lastName: string } | undefined => {
+    const member = members.find((m) => m.user_id === userId)
+    if (!member) return undefined
+    return {
+      firstName: member.first_name,
+      lastName: member.last_name
+    }
+  }
+})
 
 // Emit workflow data when loaded
 watch(workflow, (newWorkflow) => {

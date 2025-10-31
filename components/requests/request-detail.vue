@@ -183,21 +183,30 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RequestStatus, RequestAction } from '@/models/request'
-import type { User } from '@/models/user'
+import type { WorkspaceMember } from '@/types/workspace'
 
 const props = defineProps<{
   requestId: string
 }>()
 
 const { getRequest, approveRequest, rejectRequest, requestChanges, executeRequest } = useRequestsApi()
-const { getUsers } = useUsersApi()
+const { getCurrentWorkspaceMembers } = useWorkspaceApi()
 const { getUser } = useAuthStore()
 
 // Fetch request data from API
 const { data: request, pending, error } = await getRequest(props.requestId)
 
-// Fetch users for displaying assignee names
-const { data: users } = await getUsers()
+// Fetch workspace members for displaying assignee names
+const membersResponse = await getCurrentWorkspaceMembers()
+const users = computed((): WorkspaceMember[] => {
+  return membersResponse?.data?.map(m => ({
+    id: m.user_id,
+    firstName: m.first_name,
+    lastName: m.last_name,
+    email: m.email,
+    role: m.role
+  })) || []
+})
 
 // Step type labels
 const stepTypeLabels: Record<string, string> = {
@@ -212,7 +221,7 @@ function getStepTypeLabel(type: string): string {
   return stepTypeLabels[type] || type
 }
 
-function getUserById(id: string): User | undefined {
+function getUserById(id: string): WorkspaceMember | undefined {
   return users.value?.find(user => user.id === id)
 }
 

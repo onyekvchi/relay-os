@@ -125,7 +125,8 @@
 <script setup lang="ts">
 const { getWorkflows, getWorkflow } = useWorkflowsApi()
 const { getRequests, getRequest } = useRequestsApi()
-const { getUsers, getCurrentUser } = useUsersApi()
+const { getCurrentUser } = useUsersApi()
+const { getCurrentWorkspaceMembers } = useWorkspaceApi()
 
 // Workflows
 const workflowsData = ref<any>(null)
@@ -227,11 +228,11 @@ async function testGetUsers() {
   usersLoading.value = true
   usersError.value = null
   try {
-    const { data, error } = await getUsers()
-    if (error.value) {
-      usersError.value = error.value.message
+    const response = await getCurrentWorkspaceMembers()
+    if (response?.data) {
+      usersData.value = response.data
     } else {
-      usersData.value = data.value
+      usersError.value = 'No data returned'
     }
   } catch (e: any) {
     usersError.value = e.message

@@ -9,35 +9,7 @@ import { HttpMethod } from '@/types/api'
  */
 export function useUsersApi() {
   const { $api } = useNuxtApp()
-  /**
-   * Fetch all users with optional role filter
-   * @param role - Optional role filter
-   */
-  const getUsers = (role?: string) => {
-    return useApi<User[]>('/users', {
-      query: { role },
-      method: HttpMethod.GET,
-      transform: (response: ApiResponse<UserDTO[]>) => {
-        if (!response?.data) return []
-        return response.data.map((dto: UserDTO) => UserMapper.toModel(dto))
-      },
-    })
-  }
-
-  /**
-   * Fetch a single user by ID
-   * @param id - User ID
-   */
-  const getUser = (id: string) => {
-    return useApi<User | null>(`/users/${id}`, {
-      method: HttpMethod.GET,
-      transform: (response: ApiResponse<UserDTO>) => {
-        if (!response?.data) return null
-        return UserMapper.toModel(response.data)
-      },
-    })
-  }
-
+  
   /**
    * Get the current authenticated user
    */
@@ -89,8 +61,6 @@ export function useUsersApi() {
     })
 
   return {
-    getUsers,
-    getUser,
     getCurrentUser,
     updateCurrentUser,
     updateUser,

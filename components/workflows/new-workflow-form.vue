@@ -296,16 +296,26 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import { WorkflowFieldType } from '@/models/workflow'
-import type { User } from '@/models/user'
+import type { WorkspaceMember } from '@/types/workspace'
 import { routes } from '@/routes'
 
 const loading = ref(false)
 const selectedStepType = ref('')
-const { getUsers } = useUsersApi()
+const { getCurrentWorkspaceMembers } = useWorkspaceApi()
 const { createWorkflow } = useWorkflowsApi()
 
-// Fetch available users for assignees
-const { data: availableUsers, pending: usersLoading } = await getUsers()
+// Fetch available workspace members for assignees
+const membersResponse = await getCurrentWorkspaceMembers()
+const availableUsers = computed((): WorkspaceMember[] => {
+  return membersResponse?.data?.map(m => ({
+    id: m.user_id,
+    firstName: m.first_name,
+    lastName: m.last_name,
+    email: m.email,
+    role: m.role
+  })) || []
+})
+const usersLoading = ref(false)
 
 // Field type options
 const fieldTypes = [
@@ -371,7 +381,7 @@ watch(() => state.name, (newName) => {
   }
 })
 
-function getUserById(id: string): User | undefined {
+function getUserById(id: string): WorkspaceMember | undefined {
   return availableUsers.value?.find(user => user.id === id)
 }
 
