@@ -16,7 +16,7 @@ export const useAuthStore = defineStore('authStore', () => {
   const getToken = computed(() => token.value);
   const getUserId = computed(() => user.value?.id);
   const getCurrentWorkspaceId = computed(() => {
-    const workspaceId = user.value?.last_active_workspace_id
+    const workspaceId = user.value?.lastActiveWorkspaceId
     if (!workspaceId) throw new Error('No active workspace')
     return workspaceId
   });

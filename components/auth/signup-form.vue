@@ -103,10 +103,9 @@ async function onSubmit(event: FormSubmitEvent<RegisterFormFields>) {
     
     // Auto-login after successful registration
     if (response.data) {
-      const { user: userDTO, token } = response.data
-      // Transform DTO to domain model
+      const { user: userDTO, access_token, refresh_token, expires_in } = response.data
       const user = UserMapper.toModel(userDTO)
-      setAuth({ user, token })
+      setAuth({ user, access_token, refresh_token, expires_in })
       await navigateTo(routes.dashboard)
     }
   } catch (error: any) {

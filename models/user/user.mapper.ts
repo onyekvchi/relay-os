@@ -16,6 +16,9 @@ export class UserMapper {
       email: dto.email,
       phoneNumber: dto.phone_number,
       role: dto.role as UserRole,
+      lastActiveWorkspaceId: dto.last_active_workspace_id,
+      twofaEnabled: dto.twofa_enabled,
+      emailVerifiedAt: dto.email_verified_at,
       createdAt: dto.created_at,
       updatedAt: dto.updated_at
     }

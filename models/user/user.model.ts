@@ -3,8 +3,11 @@ export type User = {
   firstName: string,
   lastName: string,
   email: string,
-  phoneNumber: string,
+  phoneNumber?: string,
   role: UserRole,
+  lastActiveWorkspaceId?: string,
+  twofaEnabled?: boolean,
+  emailVerifiedAt?: string,
   createdAt: string,
   updatedAt: string
 }
