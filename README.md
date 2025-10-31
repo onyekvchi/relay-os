@@ -356,7 +356,6 @@ Expected response format:
   success: boolean;
   message: string;
   data?: T;
-  errors?: string[];
 }
 ```
 

@@ -13,40 +13,12 @@ export interface RequestDTO {
   workflow: WorkflowDTO
   status: 'running' | 'completed' | 'canceled' | 'failed'
   context: Record<string, any>
-  active_steps?: string[]
+  active_steps: string[]
   created_by: UserDTO
   created_at: string
   updated_at: string
-  field_values?: Record<string, any>
-  observer_ids?: string[]
-  observers?: UserDTO[]
-  logs?: RequestLogDTO[]
-  approvals?: RequestApprovalDTO[]
 }
 
-export interface RequestLogDTO {
-  id: string
-  action: string
-  user_id: string
-  user: UserDTO
-  comment?: string
-  created_at: string
-}
-
-export interface RequestApprovalDTO {
-  id: string
-  workflow_approval_id: string
-  workflow_approval: {
-    id: string
-    approver_id: string
-    approver: UserDTO
-    order: number
-  }
-  status: string  // 'pending', 'approved', 'rejected', 'changes_requested'
-  comment?: string
-  actioned_at?: string
-  actioned_by_id?: string
-}
 
 export interface CreateRequestRequest {
   workflow_id: string

@@ -9,16 +9,13 @@ import type { UserDTO } from '../user/user.dto'
 export interface WorkflowDTO {
   id: string
   name: string
-  workflow_key?: string
-  version?: number
-  status?: 'draft' | 'published' | 'archived'
-  start_key?: string
+  workflow_key: string
+  version: number
+  status: 'draft' | 'published' | 'archived'
+  start_key: string
   description?: string
   fields: WorkflowFieldDTO[]
-  steps?: StepDTO[]
-  approvals: WorkflowApprovalDTO[]
-  action: WorkflowActionDTO
-  is_archived: boolean
+  steps: StepDTO[]
   created_by: UserDTO
   created_at: string
   updated_at: string
@@ -50,32 +47,19 @@ export interface BranchDTO {
   to: string
 }
 
-export interface WorkflowApprovalDTO {
-  id: string
-  approver_id: string
-  approver: UserDTO
-  order: number
-}
-
-export interface WorkflowActionDTO {
-  id: string
-  actor_id: string
-  actor: UserDTO
-}
-
 export interface CreateWorkflowRequest {
   name: string
+  workflow_key: string
+  start_key: string
   description?: string
-  fields: Omit<WorkflowFieldDTO, 'id'>[]
-  approvals: Array<{ approver_id: string; order: number }>  // Array of approvals with order
-  action_actor_id: string
+  fields: WorkflowFieldDTO[]
+  steps: StepDTO[]
 }
 
 export interface UpdateWorkflowRequest {
   name?: string
+  start_key?: string
   description?: string
-  fields?: Omit<WorkflowFieldDTO, 'id'>[]
-  approvals?: Array<{ approver_id: string; order: number }>
-  action_actor_id?: string
-  is_archived?: boolean
+  fields?: WorkflowFieldDTO[]
+  steps?: StepDTO[]
 }
