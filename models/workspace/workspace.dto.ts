@@ -4,6 +4,7 @@ export interface WorkspaceDTO {
   url: string
   logo?: string
   created_at: string
+  updated_at: string
   member_count: number
 }
 

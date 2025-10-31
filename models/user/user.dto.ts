@@ -9,6 +9,7 @@ export interface UserDTO {
   last_name: string
   email: string
   phone_number?: string
+  role?: string
   last_active_workspace_id?: string
   twofa_enabled?: boolean
   email_verified_at?: string

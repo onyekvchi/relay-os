@@ -3,35 +3,41 @@ import type { User } from "../user/user.model"
 export type Workflow = {
   id: string,
   name: string,
+  workflowKey: string,
+  version: number,
+  status: 'draft' | 'published' | 'archived',
+  startKey: string,
   description?: string,
   fields: WorkflowField[],
-  approvals: WorkflowApproval[],
-  action: WorkflowAction,
-  isArchived: boolean,
+  steps: any[],
   createdBy: User,
   createdAt: string,
   updatedAt: string
 }
 
 export type WorkflowField = {
-  id: string,
+  id?: string,
+  key: string,
   label: string,
   type: WorkflowFieldType
-  description: string,
+  description?: string,
   required: boolean,
-  order: number
-  // TODO: figure out how to add constraints to fields
+  position: number,
+  options?: string[]
 }
 
 export enum WorkflowFieldType {
-  string = 'string',
-  text = 'text',
+  short_text = 'short_text',
+  long_text = 'long_text',
+  currency = 'currency',
   amount = 'amount',
-  integer = 'integer',
-  decimal = 'decimal',
-  list = 'list',
-  user = 'user',
-  entity = 'entity',
+  select = 'select',
+  multi_select = 'multi_select',
+  date = 'date',
+  datetime = 'datetime',
+  boolean = 'boolean',
+  email = 'email',
+  url = 'url',
 }
 
 export type WorkflowAction = {

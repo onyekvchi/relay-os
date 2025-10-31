@@ -1,59 +1,35 @@
 import type { Request, RequestLog, RequestWorkflowApproval, RequestStatus, RequestAction } from './request.model'
 import type { WorkflowApprovalStatus } from '../workflow/workflow.model'
-import type { RequestDTO, RequestLogDTO, RequestApprovalDTO, CreateRequestRequest } from './request.dto'
+import type { RequestDTO, CreateRequestRequest } from './request.dto'
 import { WorkflowMapper } from '../workflow/workflow.mapper'
 import { UserMapper } from '../user/user.mapper'
 
 /**
- * RequestMapper - Transforms between UI models and API DTOs
- * Backend includes nested workflow and user objects, so no separate fetching needed
+ * RequestMapper - Transforms between UI models and API DTOs for step-based workflow system
  */
 export class RequestMapper {
   /**
    * Convert API DTO to UI Model
-   * DTO already includes all nested objects
    */
   static toModel(dto: RequestDTO): Request {
     return {
       id: dto.id,
       workflowId: dto.workflow_id,
-      type: WorkflowMapper.toModel(dto.workflow),  // ← Use nested workflow from DTO
-      initiatorId: dto.initiator_id,
-      initiator: UserMapper.toModel(dto.initiator),  // ← Use nested user from DTO
+      workflow: WorkflowMapper.toModel(dto.workflow),
+      createdBy: UserMapper.toModel(dto.created_by),
       status: dto.status as RequestStatus,
-      fieldValues: dto.field_values,
-      observers: dto.observers.map(u => UserMapper.toModel(u)),  // ← Use nested users from DTO
+      context: dto.context,
+      activeSteps: dto.active_steps,
       createdAt: dto.created_at,
       updatedAt: dto.updated_at,
-      logs: dto.logs.map(log => this.logToModel(log)),
-      approvals: dto.approvals.map(approval => this.approvalToModel(approval))
-    }
-  }
-
-  private static logToModel(dto: RequestLogDTO): RequestLog {
-    return {
-      id: dto.id,
-      action: dto.action as unknown as RequestAction,
-      userId: dto.user_id,
-      user: UserMapper.toModel(dto.user),  // ← Use nested user from DTO
-      comment: dto.comment,
-      createdAt: dto.created_at
-    }
-  }
-
-  private static approvalToModel(dto: RequestApprovalDTO): RequestWorkflowApproval {
-    return {
-      id: dto.id,
-      workflowApprovalId: dto.workflow_approval_id,
-      workflowApproval: {
-        id: dto.workflow_approval.id,
-        approverId: dto.workflow_approval.approver_id,
-        approver: UserMapper.toModel(dto.workflow_approval.approver),  // ← Use nested user from DTO
-        order: dto.workflow_approval.order
-      },
-      status: dto.status as unknown as WorkflowApprovalStatus,
-      createdAt: dto.actioned_at || new Date().toISOString(),
-      comment: dto.comment
+      // Legacy properties for backward compatibility
+      type: WorkflowMapper.toModel(dto.workflow),
+      initiatorId: dto.created_by.id,
+      initiator: UserMapper.toModel(dto.created_by),
+      fieldValues: dto.context,
+      observers: [],
+      logs: [],
+      approvals: []
     }
   }
 
@@ -62,13 +38,13 @@ export class RequestMapper {
    */
   static toCreateDTO(request: {
     workflow_id: string
-    field_values: Record<string, any>
-    observer_ids?: string[]
+    context: Record<string, any>
+    observers?: string[]
   }): CreateRequestRequest {
     return {
       workflow_id: request.workflow_id,
-      field_values: request.field_values,
-      observer_ids: request.observer_ids
+      context: request.context,
+      observers: request.observers
     }
   }
 

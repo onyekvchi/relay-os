@@ -4,14 +4,19 @@ import type { Workflow, WorkflowApproval, WorkflowApprovalStatus } from "../work
 export type Request = {
   id: string,
   workflowId: string,
+  workflow: Workflow,
+  createdBy: User,
+  status: RequestStatus
+  context: Record<string, any>,
+  activeSteps: string[],
+  createdAt: string,
+  updatedAt: string,
+  // Legacy properties for backward compatibility
   type: Workflow,
   initiatorId: string,
   initiator: User
-  status: RequestStatus
   fieldValues: Record<string, any>,
   observers: User[]
-  createdAt: string,
-  updatedAt: string,
   logs: RequestLog[],
   approvals: RequestWorkflowApproval[]
 }

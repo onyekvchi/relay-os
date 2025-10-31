@@ -26,7 +26,7 @@
                 <div v-if="workspace.logo" class="w-8 h-8 bg-gray-200 rounded mr-3"></div>
                 <div class="text-left">
                   <div class="font-medium text-gray-900">{{ workspace.name }}</div>
-                  <div class="text-sm text-gray-500">{{ workspace.member_count }} members</div>
+                  <div class="text-sm text-gray-500">{{ workspace.memberCount }} members</div>
                 </div>
               </div>
               <UIcon name="i-heroicons-arrow-right" class="h-5 w-5 text-gray-400" />
@@ -75,6 +75,7 @@
 import { z } from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { routes } from '@/routes'
+import type { Workspace } from '@/models/workspace'
 
 definePageMeta({
   auth: true,
@@ -94,7 +95,7 @@ const state = reactive<FormData>({
 })
 
 const loading = ref(false)
-const availableWorkspaces = ref([])
+const availableWorkspaces = ref<Workspace[]>([])
 
 // Auto-generate URL from name
 watch(() => state.name, (newName) => {

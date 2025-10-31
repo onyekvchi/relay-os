@@ -338,15 +338,15 @@ const state = reactive({
   fields: [] as Array<{ 
     key: string
     label: string
-    type: string
-    description: string
+    type: 'short_text' | 'long_text' | 'currency' | 'amount' | 'select' | 'multi_select' | 'date' | 'datetime' | 'boolean' | 'email' | 'url'
+    description?: string
     required: boolean
     position: number
     options?: string[]
   }>,
   steps: [] as Array<{ 
     key: string
-    type: string
+    type: 'approval' | 'action' | 'gateway:exclusive' | 'gateway:parallel' | 'system_task'
     assignees?: string[]
     assignee?: string
     condition?: string
@@ -383,7 +383,7 @@ function addField() {
   state.fields.push({
     key: `field_${state.fields.length + 1}`,
     label: '',
-    type: 'short_text',
+    type: 'short_text' as const,
     description: '',
     required: true,
     position: state.fields.length

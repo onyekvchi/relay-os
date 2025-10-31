@@ -1,29 +1,27 @@
-import type { Workflow, WorkflowField, WorkflowApproval, WorkflowAction, WorkflowFieldType } from './workflow.model'
-import type { WorkflowDTO, WorkflowFieldDTO, WorkflowApprovalDTO, WorkflowActionDTO, CreateWorkflowRequest } from './workflow.dto'
+import type { Workflow, WorkflowField, WorkflowFieldType } from './workflow.model'
+import type { WorkflowDTO, WorkflowFieldDTO, CreateWorkflowRequest } from './workflow.dto'
 import { UserMapper } from '../user/user.mapper'
 
 /**
- * WorkflowMapper - Transforms between UI models and API DTOs
- * Backend includes nested user objects, so no separate fetching needed
+ * WorkflowMapper - Transforms between UI models and API DTOs for step-based workflows
  */
 export class WorkflowMapper {
   /**
    * Convert API DTO to UI Model
-   * DTO already includes all nested objects
    */
   static toModel(dto: WorkflowDTO): Workflow {
     return {
       id: dto.id,
       name: dto.name,
+      workflowKey: dto.workflow_key,
+      version: dto.version,
+      status: dto.status,
+      startKey: dto.start_key,
       description: dto.description,
       fields: dto.fields
-        .sort((a, b) => a.order - b.order)
+        .sort((a, b) => a.position - b.position)
         .map(f => this.fieldToModel(f)),
-      approvals: dto.approvals
-        .sort((a, b) => a.order - b.order)
-        .map(a => this.approvalToModel(a)),
-      action: this.actionToModel(dto.action),
-      isArchived: dto.is_archived,
+      steps: dto.steps,
       createdBy: UserMapper.toModel(dto.created_by),
       createdAt: dto.created_at,
       updatedAt: dto.updated_at
@@ -33,50 +31,34 @@ export class WorkflowMapper {
   private static fieldToModel(dto: WorkflowFieldDTO): WorkflowField {
     return {
       id: dto.id,
+      key: dto.key,
       label: dto.label,
       type: dto.type as WorkflowFieldType,
       description: dto.description,
       required: dto.required,
-      order: dto.order
-    }
-  }
-
-  private static approvalToModel(dto: WorkflowApprovalDTO): WorkflowApproval {
-    return {
-      id: dto.id,
-      approverId: dto.approver_id,
-      approver: UserMapper.toModel(dto.approver),  // ← Use nested user from DTO
-      order: dto.order
-    }
-  }
-
-  private static actionToModel(dto: WorkflowActionDTO): WorkflowAction {
-    return {
-      id: dto.id,
-      actorId: dto.actor_id,
-      actor: UserMapper.toModel(dto.actor)  // ← Use nested user from DTO
+      position: dto.position,
+      options: dto.options
     }
   }
 
   /**
    * Convert UI Model to API DTO (for create)
    */
-  static toCreateDTO(workflow: Omit<Workflow, 'id' | 'createdAt' | 'updatedAt' | 'createdById' | 'isArchived'>): CreateWorkflowRequest {
+  static toCreateDTO(workflow: {
+    name: string
+    workflow_key: string
+    start_key: string
+    description?: string
+    fields: WorkflowFieldDTO[]
+    steps: any[]
+  }): CreateWorkflowRequest {
     return {
       name: workflow.name,
+      workflow_key: workflow.workflow_key,
+      start_key: workflow.start_key,
       description: workflow.description,
-      fields: workflow.fields.map((f, index) => ({
-        label: f.label,
-        type: String(f.type),
-        description: f.description,
-        required: f.required,
-        order: index
-      })),
-      approvals: workflow.approvals.map(a => ({
-        approver_id: a.approverId,
-        order: a.order
-      })),
-      action_actor_id: workflow.action.actorId
+      fields: workflow.fields,
+      steps: workflow.steps
     }
   }
 
