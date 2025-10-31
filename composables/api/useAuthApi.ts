@@ -17,25 +17,25 @@ export function useAuthApi() {
   const { $api } = useNuxtApp()
 
   const login = (request: LoginRequest) =>
-      $api<ApiResponse<LoginData>>('/login', {
+      $api<ApiResponse<LoginData>>('/auth/login', {
         method: HttpMethod.POST,
         body: request
       })
   
   const register = (request: RegisterRequest) =>
-      $api<ApiResponse<RegisterData>>('/register', {
+      $api<ApiResponse<RegisterData>>('/auth/register', {
         method: HttpMethod.POST,
         body: request
       })
   
   const forgotPassword = (request: ForgotPasswordRequest) =>
-      $api<ApiResponse<null>>('/forgot-password', {
+      $api<ApiResponse<null>>('/auth/forgot-password', {
         method: HttpMethod.POST,
         body: request
       })
   
   const resetPassword = (request: ResetPasswordRequest) =>
-      $api<ApiResponse<null>>('/reset-password', {
+      $api<ApiResponse<null>>('/auth/reset-password', {
         method: HttpMethod.POST,
         body: request
       })

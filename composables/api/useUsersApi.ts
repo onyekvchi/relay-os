@@ -63,10 +63,21 @@ export function useUsersApi() {
     }).then(response => UserMapper.toModel(response.data!))
   }
 
+  const getUserWorkspaces = () =>
+    $api<ApiResponse<any[]>>('/users/me/workspaces')
+
+  const updateLastActiveWorkspace = (workspaceId: string) =>
+    $api<ApiResponse<null>>('/users/me/last-active-workspace', {
+      method: HttpMethod.PUT,
+      body: { workspace_id: workspaceId }
+    })
+
   return {
     getUsers,
     getUser,
     getCurrentUser,
     updateUser,
+    getUserWorkspaces,
+    updateLastActiveWorkspace,
   }
 }

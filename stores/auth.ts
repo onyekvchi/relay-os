@@ -3,6 +3,7 @@ import type { User } from "~/models/user";
 export const useAuthStore = defineStore('authStore', () => {
   const user = ref<User | null>(null);
   const token = ref<string | null>(null);
+  const refreshToken = ref<string | null>(null);
   const expiry = ref<number | null>(null);
   
   const isAuthenticated = computed(() => {
@@ -23,15 +24,27 @@ export const useAuthStore = defineStore('authStore', () => {
     token.value = newToken;
   }
   
-  function setAuth({ user: newUser, token: newToken }: { user: User; token: string }) {
+  function setAuth({ 
+    user: newUser, 
+    access_token, 
+    refresh_token: newRefreshToken, 
+    expires_in 
+  }: { 
+    user: User; 
+    access_token: string; 
+    refresh_token: string; 
+    expires_in: number; 
+  }) {
     user.value = newUser;
-    token.value = newToken;
-    expiry.value = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days (match token expiry)
+    token.value = access_token;
+    refreshToken.value = newRefreshToken;
+    expiry.value = Date.now() + expires_in * 1000;
   }
   
   function clearAuth() {
     user.value = null;
     token.value = null;
+    refreshToken.value = null;
     expiry.value = null;
   }
   
@@ -39,6 +52,7 @@ export const useAuthStore = defineStore('authStore', () => {
     // State
     user,
     token,
+    refreshToken,
     expiry,
     
     // Getters
