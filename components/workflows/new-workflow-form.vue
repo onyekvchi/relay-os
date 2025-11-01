@@ -196,14 +196,20 @@
               <UFormField label="Assignee" :name="`step_${stepIndex}_assignee`" required>
                 <USelectMenu
                   v-model="step.assignee"
-                  :items="availableUsers"
-                  label-key="email"
-                  value-key="id"
+                  :items="availableUsers?.map(user => ({ label: `${user.firstName} ${user.lastName}`, value: user.id })) || []"
+                  label-key="label"
+                  value-key="value"
                   placeholder="Select assignee"
                   size="md"
                   class="w-full"
                 />
               </UFormField>
+              
+              <div v-if="step.assignee" class="flex flex-wrap gap-2 mt-2">
+                <UBadge color="neutral" variant="outline" size="md">
+                  {{ getUserById(step.assignee)?.firstName }} {{ getUserById(step.assignee)?.lastName }}
+                </UBadge>
+              </div>
             </div>
 
             <!-- Gateway Steps -->

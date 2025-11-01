@@ -163,22 +163,44 @@
               />
             </UFormField>
 
-            <UFormField v-if="step.type === 'approval' || step.type === 'action'" :label="step.type === 'approval' ? 'Assignees' : 'Assignee'" :name="`step_${stepIndex}_assignees`" required>
+            <!-- Approval steps: multiple assignees -->
+            <UFormField v-if="step.type === 'approval'" label="Assignees" :name="`step_${stepIndex}_assignees`" required>
               <USelectMenu
                 v-model="step.assignees"
                 :items="availableUsers?.map(user => ({ label: `${user.firstName} ${user.lastName}`, value: user.id })) || []"
                 label-key="label"
                 value-key="value"
-                :placeholder="step.type === 'approval' ? 'Select assignees' : 'Select assignee'"
+                placeholder="Select assignees"
                 size="md"
-                :multiple="step.type === 'approval'"
+                multiple
                 class="w-full"
               />
             </UFormField>
 
-            <div v-if="step.assignees?.length" class="flex flex-wrap gap-2">
+            <!-- Action steps: single assignee -->
+            <UFormField v-if="step.type === 'action'" label="Assignee" :name="`step_${stepIndex}_assignee`" required>
+              <USelectMenu
+                v-model="step.assignee"
+                :items="availableUsers?.map(user => ({ label: `${user.firstName} ${user.lastName}`, value: user.id })) || []"
+                label-key="label"
+                value-key="value"
+                placeholder="Select assignee"
+                size="md"
+                class="w-full"
+              />
+            </UFormField>
+
+            <!-- Display selected assignees for approval steps -->
+            <div v-if="step.type === 'approval' && step.assignees?.length" class="flex flex-wrap gap-2">
               <UBadge v-for="assigneeId in step.assignees" :key="assigneeId" color="neutral" variant="outline" size="md">
                 {{ getUserById(assigneeId)?.firstName }} {{ getUserById(assigneeId)?.lastName }}
+              </UBadge>
+            </div>
+
+            <!-- Display selected assignee for action steps -->
+            <div v-if="step.type === 'action' && step.assignee" class="flex flex-wrap gap-2">
+              <UBadge color="neutral" variant="outline" size="md">
+                {{ getUserById(step.assignee)?.firstName }} {{ getUserById(step.assignee)?.lastName }}
               </UBadge>
             </div>
           </div>
@@ -226,7 +248,6 @@ const availableUsers = computed((): WorkspaceMember[] => {
     role: m.role
   })) || []
 })
-const usersLoading = ref(false)
 
 function getUserById(id: string): WorkspaceMember | undefined {
   return availableUsers.value?.find(user => user.id === id)
