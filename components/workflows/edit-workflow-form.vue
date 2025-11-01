@@ -317,7 +317,6 @@ async function onSubmit() {
     // Update workflow via API
     await updateWorkflow(props.workflowId, {
       name: state.name,
-      workflow_key: existingWorkflow.value?.workflowKey || '',
       start_key: existingWorkflow.value?.startKey || 'start',
       description: existingWorkflow.value?.description,
       fields: state.fields.map((field, index) => ({

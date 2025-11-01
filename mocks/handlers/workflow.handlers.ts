@@ -23,6 +23,17 @@ export function buildWorkflowDTO(workflow: any): WorkflowDTO {
 
   // Step-based system doesn't use separate approval/action entities
 
+  // Parse steps if they're stored as JSON string
+  let steps = []
+  if (workflow.steps) {
+    try {
+      steps = typeof workflow.steps === 'string' ? JSON.parse(workflow.steps) : workflow.steps
+    } catch (e) {
+      console.error('Failed to parse workflow steps:', e)
+      steps = []
+    }
+  }
+
   return {
     id: workflow.id,
     name: workflow.name,
@@ -41,7 +52,7 @@ export function buildWorkflowDTO(workflow: any): WorkflowDTO {
       position: f.position || 0,
       options: f.options ? JSON.parse(f.options) : undefined
     })) as any,
-    steps: workflow.steps || [],
+    steps: steps,
     created_by: creator as UserDTO,
     created_at: workflow.created_at,
     updated_at: workflow.updated_at,
@@ -222,7 +233,6 @@ export const workflowHandlers = [
       where: { id: { equals: id as string } },
       data: {
         name: body.name || workflow.name,
-        workflow_key: body.workflow_key || workflow.workflow_key,
         version: body.version || workflow.version,
         status: body.status || workflow.status,
         start_key: body.start_key || workflow.start_key,
